@@ -164,11 +164,15 @@
 
   <section class="card">
     <h2>2. Escala atual <small>— horário de cada dia. Ex.: <b>08:00-12:00 14:00-18:00</b>. Em branco = folga</small></h2>
+    <div id="impMsg"></div>
     <div id="emps"></div>
     <div class="row" style="margin-top:12px">
       <button class="btn" id="add">+ Colaborador</button>
       <button class="btn ghost" id="exemplo">Carregar exemplo</button>
       <button class="btn ghost" id="limpar">Limpar tudo</button>
+      <button class="btn ghost" id="importar">Importar planilha</button>
+      <a class="btn ghost" href="modelo-escala-5x2.xlsx" download style="text-decoration:none">Baixar modelo (.xlsx)</a>
+      <input type="file" id="arquivo" accept=".xlsx,.xls,.csv" hidden>
       <span style="flex:1"></span>
       <button class="btn pri" id="rodar">Analisar e gerar opções</button>
     </div>
@@ -629,7 +633,62 @@ function remuneracao(s, span, e){
   return { tipo: 'mensal', at, nv, sal: v, divAt: Math.round(at * 5), divNv: Math.round(nv * 5), horaAt: v / (at * 5), horaNv: v / (nv * 5) };
 }
 
-if (typeof module !== 'undefined') module.exports = { diasFerias, CIDADES, buildSpan, validar, avaliar, escalaAtual, gerarOpcoes, segsNovos, parseHorario, remuneracao, horaDia, cargaNova, cargaAtual, regra };
+/* ---------- Importação de planilha (linhas já lidas) ---------- */
+const semAcento = t => String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+function celHora(v){
+  if (typeof v === 'number') { const m = Math.round((v % 1) * 1440); return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+  return String(v ?? '').trim();
+}
+function numBR(v){
+  if (typeof v === 'number') return v;
+  let t = String(v ?? '').replace(/[R$\s]/g, '');
+  if (!t) return '';
+  if (/,\d{1,2}$/.test(t)) t = t.replace(/\./g, '').replace(',', '.'); else t = t.replace(/,/g, '');
+  const n = parseFloat(t); return isNaN(n) ? '' : n;
+}
+const sim = v => /^(s|sim|x|1|true|verdadeiro)$/.test(semAcento(v));
+function importarColaboradores(rows){
+  const hi = rows.findIndex(r => r && r.some(c => semAcento(c) === 'nome'));
+  if (hi < 0) return { erro: 'Não achei a linha de cabeçalho com a coluna "Nome".' };
+  const H = rows[hi].map(semAcento), col = {};
+  const regras = [['nome', h => h === 'nome'], ['cargo', h => h.startsWith('cargo')], ['mulher', h => h.startsWith('mulher')],
+    ['menor', h => h.startsWith('menor')], ['insal', h => h.startsWith('insalub')], ['parcial', h => h.includes('parcial')],
+    ['tipoRem', h => h.startsWith('remuner') || h.startsWith('tipo')], ['sal', h => h.startsWith('salario') || h.startsWith('valor')]];
+  H.forEach((h, i) => { for (const [k, f] of regras) if (col[k] === undefined && f(h)) { col[k] = i; break; } });
+  ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'].forEach((d, k) => { const i = H.findIndex(h => h.startsWith(d)); if (i >= 0) col['d' + k] = i; });
+  const faltam = [0,1,2,3,4,5,6].filter(k => col['d' + k] === undefined).map(k => DIAS[k]);
+  if (faltam.length) return { erro: 'Faltam as colunas de dia: ' + faltam.join(', ') + '.' };
+  const emps = [], avisos = [];
+  rows.slice(hi + 1).forEach((r, k) => {
+    if (!r) return;
+    const nome = String(r[col.nome] ?? '').trim();
+    if (!nome || /\(exemplo\)$/i.test(nome)) return;
+    const hor = [0,1,2,3,4,5,6].map(d => celHora(r[col['d' + d]]));
+    const ruins = hor.map((h, d) => parseHorario(h).erro ? DIAS[d] : null).filter(Boolean);
+    if (ruins.length) avisos.push(`Linha ${hi + k + 2} (${nome}): horário inválido em ${ruins.join(', ')}.`);
+    const g = c => col[c] === undefined ? '' : r[col[c]];
+    emps.push({ nome, cargo: String(g('cargo') ?? '').trim(), mulher: sim(g('mulher')), menor: sim(g('menor')), insal: sim(g('insal')),
+      parcial: sim(g('parcial')), tipoRem: semAcento(g('tipoRem')).startsWith('hor') ? 'hora' : 'mensal', sal: numBR(g('sal')), hor });
+  });
+  if (!emps.length) return { erro: 'Nenhum colaborador encontrado abaixo do cabeçalho.' };
+  return { emps, avisos };
+}
+function importarEmpresa(rows){
+  const out = {};
+  (rows || []).forEach(r => {
+    if (!r) return;
+    const k = semAcento(r[0]), v = String(r[1] ?? '').trim();
+    if (!v) return;
+    if (k.startsWith('razao')) out.razao = v;
+    else if (k === 'cnpj') out.cnpj = v;
+    else if (k === 'cidade') out.cidade = v;
+    else if (k === 'uf') out.uf = v.toUpperCase();
+    else if (k.startsWith('atividade')) out.setor = semAcento(v).startsWith('comerc') ? 'comercio' : 'outros';
+  });
+  return out;
+}
+
+if (typeof module !== 'undefined') module.exports = { importarColaboradores, importarEmpresa, diasFerias, CIDADES, buildSpan, validar, avaliar, escalaAtual, gerarOpcoes, segsNovos, parseHorario, remuneracao, horaDia, cargaNova, cargaAtual, regra };
 </script>
 
 <!-- ===================== INTERFACE ===================== -->
@@ -756,6 +815,41 @@ document.addEventListener('click', ev => {
   if (t.id === 'prEscala') imprimir(docEscala());
   if (t.id === 'prTermos') imprimir(docTermos());
 });
+/* ---------- Importar planilha ---------- */
+let XLSX_PROMISE = null;
+function carregarXLSX(){
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  return XLSX_PROMISE ||= new Promise((ok, fail) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = () => ok(window.XLSX); sc.onerror = () => { XLSX_PROMISE = null; fail(new Error('Não foi possível carregar o leitor de planilhas. Verifique a internet.')); };
+    document.head.appendChild(sc);
+  });
+}
+function msgImport(html, tipo){ $('#impMsg').innerHTML = `<p class="${tipo}">${html}</p>`; }
+$('#importar').onclick = () => $('#arquivo').click();
+$('#arquivo').onchange = async ev => {
+  const f = ev.target.files[0]; ev.target.value = '';
+  if (!f) return;
+  try {
+    msgImport('Lendo a planilha…', 'info');
+    const X = await carregarXLSX();
+    const wb = X.read(await f.arrayBuffer(), { type: 'array' });
+    const nomeAba = wb.SheetNames.find(n => semAcento(n).startsWith('colaborador')) || wb.SheetNames[0];
+    const rows = X.utils.sheet_to_json(wb.Sheets[nomeAba], { header: 1, raw: true, defval: '' });
+    const r = importarColaboradores(rows);
+    if (r.erro) return msgImport(esc(r.erro) + ' Use a planilha modelo.', 'note');
+    const abaEmp = wb.SheetNames.find(n => semAcento(n).startsWith('empresa'));
+    const emp = abaEmp ? importarEmpresa(X.utils.sheet_to_json(wb.Sheets[abaEmp], { header: 1, raw: false, defval: '' })) : {};
+    const anterior = JSON.stringify(S);
+    Object.assign(S, emp); S.emps = r.emps;
+    if (emp.cidade) { const c = CIDADES.find(x => semAcento(x[0]) === semAcento(emp.cidade) && (!emp.uf || x[1] === emp.uf)); if (c) { S.cidade = c[0]; S.uf = c[1]; S.ferLocais = c[2]; } }
+    renderParams(); renderEmps(); save(); $('#saida').innerHTML = ''; RES = null;
+    msgImport(`${r.emps.length} colaborador(es) importado(s) de "${esc(f.name)}".${r.avisos.length ? '<br>' + r.avisos.map(esc).join('<br>') : ''} <button class="btn ghost sm" id="desfazImp">Desfazer importação</button>`, r.avisos.length ? 'note' : 'info');
+    $('#desfazImp').onclick = () => { S = JSON.parse(anterior); renderParams(); renderEmps(); save(); $('#impMsg').innerHTML = ''; };
+  } catch (e) { msgImport(esc(e.message || 'Não consegui ler o arquivo.'), 'note'); }
+};
+
 $('#add').onclick = () => { S.emps.push(novoEmp()); renderEmps(); save(); };
 $('#exemplo').onclick = () => { S = exemplo(); renderParams(); renderEmps(); save(); $('#saida').innerHTML = ''; };
 $('#limpar').onclick = () => { S = vazio(); renderParams(); renderEmps(); save(); $('#saida').innerHTML = ''; };
