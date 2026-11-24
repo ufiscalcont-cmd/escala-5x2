@@ -9,7 +9,7 @@
     --bg:#f6f7f9; --card:#fff; --ink:#1d2433; --muted:#667085; --line:#e3e6ec;
     --pri:#1f4fd1; --pri-soft:#e8eefc; --ok:#13795b; --ok-soft:#e5f5ee;
     --warn:#b25e09; --warn-soft:#fdf1e3; --err:#c0262d; --err-soft:#fdeaea;
-    --off:#eef1f5; --sun:#fff6db;
+    --off:#eef1f5; --sun:#fff6db; --hol:#efe7fb; --holc:#6b3fb5;
   }
   *{box-sizing:border-box}
   body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
@@ -20,28 +20,28 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
   .card h2{margin:0 0 12px;font-size:17px}
   .card h2 small{font-weight:400;color:var(--muted);font-size:13px}
-  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+  .card h3{font-size:15px;margin:16px 0 8px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
   label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
-  select,input[type=month],input[type=text],input[type=number]{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
-  input[type=number]{padding:6px 4px;text-align:center}
-  .check{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--ink)}
-  .check input{margin-top:3px}
+  select,input[type=month],input[type=text],input[type=number]{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:16px;background:#fff;color:var(--ink)}
+  input.bad{border-color:var(--err);background:var(--err-soft)}
+  .check{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--ink);margin:0}
+  .check input{margin-top:3px;flex:none}
+  .check.dis{opacity:.45}
   table{border-collapse:collapse;width:100%}
   th,td{border-bottom:1px solid var(--line);padding:6px 5px;text-align:center;font-size:13px}
   th{color:var(--muted);font-weight:600}
   td.l,th.l{text-align:left}
   .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .days-cfg td{padding:4px}
-  .days-cfg input[type=number]{width:52px}
-  .emp-table input[type=number]{width:52px}
-  .emp-table input[type=text]{min-width:120px}
+  .days-cfg input[type=number]{width:56px;padding:6px 4px;text-align:center}
   .btn{border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--pri-soft);color:var(--pri)}
   .btn.pri{background:var(--pri);color:#fff}
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
   .btn.x{background:transparent;color:var(--err);padding:4px 8px}
+  .btn.sm{padding:6px 10px;font-size:13px}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .muted{color:var(--muted)}
-  .small{font-size:12.5px}
+  .muted{color:var(--muted)} .small{font-size:12.5px}
   .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600}
   .pill.ok{background:var(--ok-soft);color:var(--ok)}
   .pill.warn{background:var(--warn-soft);color:var(--warn)}
@@ -49,89 +49,122 @@
   .issues{margin:6px 0 0;padding-left:18px}
   .issues li{margin:2px 0;font-size:13px}
   .issues li.err{color:var(--err)} .issues li.warn{color:var(--warn)}
+  .emp{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+  .emp-top{display:grid;gap:8px;grid-template-columns:minmax(0,2fr) minmax(0,1.4fr) auto}
+  .chips{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0}
+  .chips .check{font-size:13.5px}
+  .rem{display:grid;gap:8px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);max-width:420px;margin-bottom:10px}
+  .hor{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .hor label{margin:0}
+  .hor input{font-size:15px;padding:7px 8px}
+  .emp-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:13px}
   .opts{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-bottom:14px}
   .opt{border:2px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit}
   .opt.sel{border-color:var(--pri);background:var(--pri-soft)}
   .opt h3{margin:0 0 4px;font-size:15px}
   .opt p{margin:0 0 8px;font-size:12.5px;color:var(--muted)}
   .opt .rec{float:right}
-  .cal th{font-size:11.5px;padding:4px 2px;min-width:34px}
-  .cal td{font-size:12px;padding:5px 2px;border:1px solid var(--line)}
-  .cal td.l{position:sticky;left:0;background:#fff;z-index:1;min-width:120px;font-weight:600}
+  .cal th{font-size:11.5px;padding:4px 2px;min-width:38px}
+  .cal td{font-size:12px;padding:6px 2px;border:1px solid var(--line)}
+  .cal td.l{position:sticky;left:0;background:#fff;z-index:1;min-width:130px;font-weight:600}
   .cal th.l{position:sticky;left:0;background:#fff;z-index:1}
   .cal .out{opacity:.38}
   .cal .sun{background:var(--sun)}
   .cal td.f{background:var(--ok-soft);color:var(--ok);font-weight:700}
+  .cal td.h{background:var(--hol);color:var(--holc);font-weight:700}
   .cal td.c{background:var(--off);color:var(--muted)}
-  .cal td.t{color:var(--ink)}
+  .cal td.ed{cursor:pointer}
+  .cal td.mod{outline:2px dashed var(--pri);outline-offset:-3px}
   .cal tr.cov td{font-weight:700}
   .cal td.low{background:var(--err-soft);color:var(--err)}
+  .cal th.fer{color:var(--holc)}
   .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:8px 0}
   .legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px;background:var(--c)}
   details summary{cursor:pointer;font-weight:600}
   .law li{margin:4px 0;font-size:13.5px}
-  .note{background:var(--warn-soft);border-radius:10px;padding:10px 12px;font-size:13px;color:#7a4306}
+  .note{background:var(--warn-soft);border-radius:10px;padding:10px 12px;font-size:13px;color:#7a4306;margin:10px 0}
+  .info{background:var(--pri-soft);border-radius:10px;padding:10px 12px;font-size:13px;color:#16307f;margin:10px 0}
   footer{text-align:center;font-size:12px;color:var(--muted);padding:10px}
+  #printArea{display:none}
+  .nomebtn{all:unset;cursor:pointer;color:var(--pri);font-weight:700;text-decoration:underline dotted}
+  .balao{position:absolute;z-index:50;width:min(340px,92vw);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(20,33,61,.18);padding:14px}
+  .balao h4{margin:0 0 4px;font-size:15px;padding-right:24px}
+  .balao .fechar{position:absolute;top:8px;right:8px}
+  .balao .dias{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .balao .dias span{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:4px 8px;font-size:13px;font-weight:600}
+  .balao ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted)}
+  @media (max-width:600px){ .emp-top{grid-template-columns:minmax(0,1fr) auto} .emp-top .cargo{grid-column:1/2;grid-row:2} }
   @media print{
-    header,.no-print,.card.params,.card.atual-input,.opts,footer{display:none!important}
-    body{background:#fff} .card{border:0;padding:0}
-    .cal td,.cal th{font-size:9px}
+    @page{size:A4 landscape;margin:12mm}
+    body{background:#fff}
+    body>*:not(#printArea){display:none!important}
+    #printArea{display:block!important;font:11px/1.4 Arial,sans-serif;color:#000}
+    .doc{page-break-after:always}
+    .doc:last-child{page-break-after:auto}
+    .doc h1{font-size:15px;margin:0 0 4px}
+    .doc table{border-collapse:collapse;width:100%;margin:8px 0}
+    .doc th,.doc td{border:1px solid #444;padding:3px 2px;font-size:9.5px;text-align:center}
+    .doc td.l,.doc th.l{text-align:left}
+    .doc .meta{font-size:11px;margin:2px 0}
+    .doc .ass td{height:26px}
+    .doc.termo{font-size:12.5px;line-height:1.6;max-width:180mm}
+    .doc.termo p{margin:0 0 9px;text-align:justify}
+    .doc.termo .sign{display:flex;gap:40px;margin-top:40px}
+    .doc.termo .sign div{flex:1;border-top:1px solid #000;padding-top:4px;text-align:center}
   }
 </style>
 </head>
 <body>
 <header>
   <h1>Planejador de Escala 5x2</h1>
-  <p>Analisa a escala atual e sugere novas escalas conforme a EC 141/2026, o Decreto 13.173/2026 e a Portaria MTE 2.041/2026.</p>
+  <p>Analisa a escala atual e monta a nova conforme a EC 141/2026, o Decreto 13.173/2026, a Portaria MTE 2.041/2026 e a CLT.</p>
 </header>
 
 <main>
-  <section class="card params">
-    <h2>1. Parâmetros da empresa</h2>
+  <section class="card">
+    <h2>1. Empresa e regras aplicáveis</h2>
     <div class="grid">
-      <div>
-        <label for="setor">Atividade</label>
+      <div><label for="razao">Razão social</label><input type="text" id="razao" placeholder="Nome da empresa"></div>
+      <div><label for="cnpj">CNPJ</label><input type="text" id="cnpj" placeholder="00.000.000/0000-00"></div>
+      <div><label for="cidadeSel">Cidade da empresa</label><select id="cidadeSel"></select>
+        <input type="text" id="cidade" placeholder="Nome da cidade" style="margin-top:6px"></div>
+      <div><label for="uf">UF (feriados estaduais)</label>
+        <select id="uf"><option value="BA">Bahia</option><option value="SE">Sergipe</option><option value="">Outro estado</option></select></div>
+      <div><label for="setor">Atividade</label>
         <select id="setor">
-          <option value="comercio">Comércio em geral (folga dominical a cada 3 semanas)</option>
-          <option value="outros">Demais atividades (folga dominical a cada 4 semanas)</option>
-        </select>
-      </div>
-      <div>
-        <label for="fase">Limite semanal</label>
-        <select id="fase">
-          <option value="42">42h — a partir de 16/12/2026</option>
-          <option value="40">40h — a partir de 16/12/2027</option>
-        </select>
-      </div>
-      <div>
-        <label for="mes">Mês da nova escala</label>
-        <input type="month" id="mes">
-      </div>
-      <div>
-        <label>&nbsp;</label>
-        <div class="check"><input type="checkbox" id="acordo"><span>Há convenção ou acordo coletivo que permite compensação de jornada e redistribuição das folgas no mês</span></div>
-      </div>
+          <option value="comercio">Comércio em geral</option>
+          <option value="outros">Demais atividades</option>
+        </select></div>
+      <div><label for="mes">Mês da nova escala</label><input type="month" id="mes"></div>
+      <div><label for="semIni">A semana começa em</label>
+        <select id="semIni"><option value="0">Segunda-feira</option><option value="6">Domingo</option><option value="5">Sábado</option><option value="1">Terça-feira</option><option value="2">Quarta-feira</option><option value="3">Quinta-feira</option><option value="4">Sexta-feira</option></select></div>
+      <div><label for="comp">Compensação de horas (dias acima de 8h)</label>
+        <select id="comp">
+          <option value="nenhuma">Não há acordo de compensação</option>
+          <option value="individual">Acordo individual escrito — compensação no mês (art. 59, §6º, CLT)</option>
+          <option value="coletiva">Convenção ou acordo coletivo</option>
+        </select></div>
     </div>
+    <div class="grid" style="margin-top:12px">
+      <p class="check" id="redistBox"><input type="checkbox" id="redist"><span>A norma coletiva permite <b>redistribuir as folgas no mês</b> (Portaria 2.041/2026)</span></p>
+      <p class="check"><input type="checkbox" id="abreFeriado"><span>A empresa <b>abre nos feriados</b></span></p>
+      <p class="check" id="ferAutBox"><input type="checkbox" id="ferAut"><span>A convenção coletiva <b>autoriza trabalho em feriados</b> no comércio (Lei 10.101/2000, art. 6º-A)</span></p>
+      <div><label for="ferLocais">Feriados municipais (dd/mm, separados por vírgula)</label><input type="text" id="ferLocais" placeholder="ex.: 24/06, 13/12"></div>
+    </div>
+    <p class="muted small" id="ferFonte"></p>
+    <p class="muted small" id="ferMes"></p>
 
-    <div class="scroll" style="margin-top:14px">
+    <div class="scroll" style="margin-top:8px">
       <table class="days-cfg">
         <thead><tr><th class="l">Dia</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th></tr></thead>
-        <tbody>
-          <tr><td class="l">Empresa abre?</td></tr>
-          <tr><td class="l">Mínimo de pessoas</td></tr>
-        </tbody>
+        <tbody><tr></tr><tr></tr></tbody>
       </table>
     </div>
   </section>
 
-  <section class="card atual-input">
-    <h2>2. Escala atual <small>— horas trabalhadas em cada dia da semana (0 = folga)</small></h2>
-    <div class="scroll">
-      <table class="emp-table">
-        <thead><tr><th class="l">Colaborador(a)</th><th title="Mulher: revezamento dominical quinzenal (art. 386 CLT)">Mulher</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th><th>Total</th><th></th></tr></thead>
-        <tbody id="emps"></tbody>
-      </table>
-    </div>
+  <section class="card">
+    <h2>2. Escala atual <small>— horário de cada dia. Ex.: <b>08:00-12:00 14:00-18:00</b>. Em branco = folga</small></h2>
+    <div id="emps"></div>
     <div class="row" style="margin-top:12px">
       <button class="btn" id="add">+ Colaborador</button>
       <button class="btn ghost" id="exemplo">Carregar exemplo</button>
@@ -147,144 +180,346 @@
     <details>
       <summary>Regras que a ferramenta verifica</summary>
       <ul class="law">
-        <li><b>Dois repousos por semana</b>, de 24h consecutivas cada, um deles preferencialmente no domingo (a partir de 16/12/2026).</li>
-        <li><b>Jornada:</b> até 8h por dia e 42h por semana a partir de 16/12/2026; 40h a partir de 16/12/2027. Médias apuradas por mês-calendário.</li>
-        <li><b>Com convenção ou acordo coletivo</b>, as folgas podem ser redistribuídas no mês: média de 2 por semana, mínimo de 9 folgas em meses de 29 a 31 dias e 8 em fevereiro, e nunca mais de 6 dias seguidos de trabalho. Sem acordo, são 2 folgas em toda semana.</li>
-        <li><b>Domingos:</b> comércio folga pelo menos 1 domingo a cada 3 semanas; demais atividades, 1 a cada 4. Mulheres que trabalham aos domingos: revezamento quinzenal (art. 386 da CLT).</li>
-        <li><b>Compensação de horas</b> (dias acima de 8h) só com convenção ou acordo; teto considerado: 10h/dia (art. 59 da CLT).</li>
-        <li><b>Salário-hora:</b> divisor 220 (44h) → 210 (42h) → 200 (40h). Sem redução salarial nominal; quem já faz 40h ou menos não tem a jornada reduzida.</li>
+        <li><b>Transição:</b> até 15/12/2026 vale a regra antiga (44h e 1 repouso semanal). De 16/12/2026: 42h e 2 repousos. De 16/12/2027: 40h. A semana que atravessa a data é avaliada pela regra antiga e sinalizada.</li>
+        <li><b>Repousos:</b> 2 por semana, de 24h cada, somadas às 11h de interjornada (Súmula 110 do TST). Feriado não conta como repouso semanal. Nunca mais de 6 dias seguidos de trabalho.</li>
+        <li><b>Redistribuição de folgas no mês</b> só com norma coletiva: mínimo de 9 folgas em meses de 29–31 dias e 8 em fevereiro.</li>
+        <li><b>Compensação de horas:</b> sem acordo, máximo de 8h/dia e limite semanal em toda semana. Com acordo individual escrito (compensação no mesmo mês) ou norma coletiva, até 10h/dia e média mensal dentro do limite. Menor de 18 anos e atividade insalubre só compensam com norma coletiva (art. 413 da CLT; art. 64 da Portaria MTP 671/2021).</li>
+        <li><b>Intervalos:</b> 1h para jornada acima de 6h; 15 min entre 4h e 6h; acima de 2h só com acordo escrito ou norma coletiva (art. 71). 11h entre jornadas (art. 66).</li>
+        <li><b>Domingos:</b> comércio, 1 folga a cada 3 semanas; demais atividades, 1 a cada 4; mulheres, revezamento quinzenal (art. 386).</li>
+        <li><b>Feriados:</b> no comércio, trabalho só com convenção coletiva. Nas demais atividades, pagar em dobro ou dar folga compensatória (Lei 605/1949, art. 9º).</li>
+        <li><b>Noturno (22h–5h):</b> adicional de 20% e hora de 52min30s (art. 73). Proibido para menores (art. 404).</li>
+        <li><b>Folga trabalhada</b> sem compensação na semana: pagamento em dobro (Súmula 146 do TST).</li>
+        <li><b>Tempo parcial:</b> limite de 30h semanais (art. 58-A).</li>
       </ul>
-      <p class="note">Não verificado aqui: feriados, intervalo interjornada de 11h (o planejador trabalha com horas por dia, não com horários), regime 12x36, turnos ininterruptos de revezamento, tempo parcial e regras próprias de cada convenção coletiva. A ferramenta é apoio ao planejamento e não substitui a leitura da Portaria 2.041/2026 nem da convenção da categoria.</p>
+      <p class="note">Não verificado: 12x36, turnos ininterruptos de revezamento, sobreaviso e cláusulas próprias de cada convenção. A Sexta-feira Santa entra como feriado por ser declarada em quase todos os municípios; ajuste se não for o caso. Ferramenta de apoio ao planejamento: não substitui a leitura da Portaria 2.041/2026 nem da norma coletiva da categoria.</p>
     </details>
   </section>
 </main>
 <footer>Escala 5x2 · código aberto · os dados ficam só no seu navegador</footer>
+<div id="printArea"></div>
 
 <!-- ===================== LÓGICA (funções puras) ===================== -->
 <script id="logic">
 const DIAS = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-const DOM = 6, SAB = 5, SEG = 0;
-const EPS = 1e-6;
+const DIAS_LONGO = ['segunda','terça','quarta','quinta','sexta','sábado','domingo'];
+const DOM = 6, SAB = 5, SEG = 0, EPS = 1e-6;
+const T42 = new Date(2026, 11, 16), T40 = new Date(2027, 11, 16);
 
-function wdOf(d){ return (d.getDay() + 6) % 7; } // Seg=0 … Dom=6
+const pad = n => String(n).padStart(2, '0');
+function wdOf(d){ return (d.getDay() + 6) % 7; }
+function soma(a){ return a.reduce((x, y) => x + (+y || 0), 0); }
+function fmtH(x){ const m = Math.round(x * 60); return Math.floor(m / 60) + 'h' + (m % 60 ? pad(m % 60) : ''); }
+function fmtHM(min){ min = ((Math.round(min) % 1440) + 1440) % 1440; return pad(Math.floor(min / 60)) + ':' + pad(min % 60); }
+function fmtData(d){ return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+function lst(a){ return a.length > 8 ? a.slice(0, 8).join(', ') + ` e mais ${a.length - 8}` : a.join(', '); }
+function brl(v){ return 'R$ ' + (+v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
-function buildSpan(mesStr){
-  const [y, m] = mesStr.split('-').map(Number);
+/* ---------- Regra no tempo ---------- */
+function regra(d){
+  if (d >= T40) return { L: 40, dsr: 2, nome: '40h semanais e 2 repousos' };
+  if (d >= T42) return { L: 42, dsr: 2, nome: '42h semanais e 2 repousos' };
+  return { L: 44, dsr: 1, nome: '44h semanais e 1 repouso (regra anterior)' };
+}
+
+/* ---------- Horários ---------- */
+function toMin(t){
+  const m = /^(\d{1,2})(?:[:h]?(\d{2}))?$/.exec(t.trim());
+  if (!m) return NaN;
+  const h = +m[1], mi = +(m[2] || 0);
+  return (h > 24 || mi > 59) ? NaN : h * 60 + mi;
+}
+function parseHorario(str){
+  str = (str || '').trim();
+  if (!str || str === '0' || /^f/i.test(str)) return { segs: [] };
+  const parts = str.split(/[\s;,]+/).filter(Boolean), segs = [];
+  let last = -1;
+  for (const p of parts) {
+    const mm = p.split(/[-–]/);
+    if (mm.length !== 2) return { segs: [], erro: true };
+    let a = toMin(mm[0]), b = toMin(mm[1]);
+    if (isNaN(a) || isNaN(b)) return { segs: [], erro: true };
+    while (a < last) a += 1440;
+    while (b <= a) b += 1440;
+    segs.push([a, b]); last = b;
+  }
+  return { segs };
+}
+const segMin = sg => sg.reduce((a, [x, y]) => a + y - x, 0);
+const maxGap = sg => sg.slice(1).reduce((m, s, k) => Math.max(m, s[0] - sg[k][1]), 0);
+const fmtSegs = sg => sg.length ? sg.map(([a, b]) => fmtHM(a) + '–' + fmtHM(b)).join(' · ') : 'folga';
+function minNoturnos(sg){
+  let t = 0;
+  for (const [a, b] of sg) for (const [x, y] of [[-120, 300], [1320, 1740], [2760, 3180]]) t += Math.max(0, Math.min(b, y) - Math.max(a, x));
+  return t;
+}
+function cargaAtual(e){ return soma(e.hor.map(h => segMin(parseHorario(h).segs) / 60)); }
+function modelo(e){
+  const starts = [], ints = [];
+  e.hor.forEach(h => { const sg = parseHorario(h).segs; if (sg.length) { starts.push(sg[0][0] % 1440); if (sg.length > 1) ints.push(sg[1][0] - sg[0][1]); } });
+  const freq = {}; starts.forEach(x => freq[x] = (freq[x] || 0) + 1);
+  const ent = starts.length ? +Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0] : 480;
+  return { ent, int: ints.length ? Math.max(...ints) : 60 };
+}
+function montarSegs(ent, intAtual, H){
+  const need = H > 360 ? 60 : H > 240 ? 15 : 0;
+  if (!need) return [[ent, ent + H]];
+  const iv = Math.min(120, Math.max(need, intAtual || need));
+  let first = Math.round(H / 2 / 30) * 30;
+  if (first <= 0) first = 30; if (first >= H) first = H - 30;
+  return [[ent, ent + first], [ent + first + iv, ent + H + iv]];
+}
+
+/* ---------- Feriados ---------- */
+function pascoa(y){
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),
+    g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+    mes = Math.floor((h + l - 7 * m + 114) / 31), dia = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(y, mes - 1, dia);
+}
+function feriadosAno(s, y){
+  const f = {}, add = (m, d, n) => { f[pad(d) + '/' + pad(m)] = n; };
+  [[1,1,'Confraternização Universal'],[4,21,'Tiradentes'],[5,1,'Dia do Trabalho'],[9,7,'Independência'],[10,12,'N. Sra. Aparecida'],
+   [11,2,'Finados'],[11,15,'Proclamação da República'],[11,20,'Consciência Negra'],[12,25,'Natal']].forEach(x => add(...x));
+  const sx = pascoa(y); sx.setDate(sx.getDate() - 2); add(sx.getMonth() + 1, sx.getDate(), 'Sexta-feira Santa');
+  if (s.uf === 'BA') add(7, 2, 'Independência da Bahia');
+  if (s.uf === 'SE') add(7, 8, 'Emancipação de Sergipe');
+  (s.ferLocais || '').split(/[,;\s]+/).forEach(t => { const m = /^(\d{1,2})\/(\d{1,2})$/.exec(t); if (m) add(+m[2], +m[1], 'Feriado municipal'); });
+  return f;
+}
+
+/* ---------- Cidades atendidas (feriados municipais pré-preenchidos) ---------- */
+const CIDADES = [
+  ['Paripiranga', 'BA', '29/06, 30/11, 08/12', 'tj'], ['Adustina', 'BA', '', ''], ['Aporá', 'BA', '', ''],
+  ['Canavieiras', 'BA', '20/01, 25/05, 14/07', 'tj'], ['Cícero Dantas', 'BA', '09/06, 15/08, 15/09', 'tj'],
+  ['Jeremoabo', 'BA', '06/07', 'tj'], ['Ribeira do Pombal', 'BA', '24/06, 19/09, 15/10', 'tj'],
+  ['Aracaju', 'SE', '17/03, 08/12', 'ag'], ['Estância', 'SE', '04/05, 24/06', 'ag'], ['Itabaiana', 'SE', '28/08', 'ag'],
+  ['Lagarto', 'SE', '20/04', 'ag'], ['Nossa Senhora do Socorro', 'SE', '', ''], ['Poço Verde', 'SE', '01/02', 'ag'],
+  ['Simão Dias', 'SE', '06/02', 'ag'],
+];
+const _ferCache = {};
+function ehFeriado(s, date){
+  const y = date.getFullYear(), k = y + '|' + s.uf + '|' + s.ferLocais;
+  if (!_ferCache[k]) _ferCache[k] = feriadosAno(s, y);
+  return _ferCache[k][pad(date.getDate()) + '/' + pad(date.getMonth() + 1)] || null;
+}
+
+/* ---------- Férias: dias em que podem começar (art. 134, §3º, CLT) ---------- */
+function diasFerias(s, span, work){
+  const n = span.days.length, livre = j => {
+    if (j < n) { const d = span.days[j]; return !work[j] || !!d.feriado; }
+    const dt = new Date(span.days[n - 1].date); dt.setDate(dt.getDate() + (j - n + 1));
+    return !work[j - 7] || !!ehFeriado(s, dt);
+  };
+  const out = [];
+  span.days.forEach((d, i) => {
+    if (!d.inMonth || !work[i] || d.feriado) return;
+    if (livre(i + 1) || livre(i + 2)) return;
+    out.push(d);
+  });
+  return out;
+}
+
+/* ---------- Período do mês ---------- */
+function buildSpan(s){
+  const [y, m] = s.mes.split('-').map(Number), ini = +s.semIni || 0;
   const first = new Date(y, m - 1, 1), last = new Date(y, m, 0);
-  const start = new Date(y, m - 1, 1 - wdOf(first));
-  const end = new Date(y, m - 1, last.getDate() + (6 - wdOf(last)));
+  const start = new Date(y, m - 1, 1 - ((wdOf(first) - ini + 7) % 7));
+  const end = new Date(y, m - 1, last.getDate() + ((ini + 6 - wdOf(last) + 7) % 7));
+  const fer = {};
   const days = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    days.push({ date: new Date(d), wd: wdOf(d), inMonth: d.getMonth() === m - 1, dia: d.getDate() });
+    const yy = d.getFullYear(); if (!fer[yy]) fer[yy] = feriadosAno(s, yy);
+    days.push({ date: new Date(d), wd: wdOf(d), inMonth: d.getMonth() === m - 1, dia: d.getDate(), feriado: fer[yy][pad(d.getDate()) + '/' + pad(d.getMonth() + 1)] || null });
   }
-  return { days, weeks: days.length / 7, diasMes: last.getDate(), y, m };
+  const rFim = regra(last), rIni = regra(first);
+  return { days, weeks: days.length / 7, diasMes: last.getDate(), y, m, first, last, rFim, transicao: rIni.L !== rFim.L,
+    inicioNovo: rIni.L !== rFim.L ? (rFim.L === 40 ? T40 : T42) : first };
 }
 
-function params(s){
-  return { L: s.fase === '40' ? 40 : 42, capDia: s.acordo ? 10 : 8 };
-}
+/* ---------- Regras por colaborador ---------- */
 function nDomingo(s, e){ return e.mulher ? 2 : (s.setor === 'comercio' ? 3 : 4); }
-function soma(a){ return a.reduce((x, y) => x + (+y || 0), 0); }
-function cargaNova(s, e){
-  const { L } = params(s);
-  const atual = soma(e.horas);
-  return atual > 0 ? Math.min(atual, L) : L;
+function capDia(s, e){
+  if (s.comp === 'nenhuma') return 8;
+  if ((e.menor || e.insal) && s.comp !== 'coletiva') return 8;
+  return 10;
 }
-function horaDia(s, e){ return Math.min(params(s).capDia, cargaNova(s, e) / 5); }
-function fmtH(x){
-  const m = Math.round(x * 60);
-  return Math.floor(m / 60) + 'h' + (m % 60 ? String(m % 60).padStart(2, '0') : '');
-}
-function minFolgasMes(diasMes){ return diasMes >= 29 ? 9 : 8; }
-function fechados(s){ return [0,1,2,3,4,5,6].filter(d => !s.aberto[d]); }
-function abertos(s){ return [0,1,2,3,4,5,6].filter(d => s.aberto[d]); }
-function pares(arr){ const r = []; for (let i = 0; i < arr.length; i++) for (let j = i + 1; j < arr.length; j++) r.push([arr[i], arr[j]]); return r; }
-function adj(a, b){ return Math.abs(a - b) === 1 || Math.abs(a - b) === 6; }
-function fromWeekly(span, offsFn){ return span.days.map((d, i) => !offsFn(Math.floor(i / 7)).has(d.wd)); }
+function limiteSem(e, r){ return e.parcial ? Math.min(30, r.L) : r.L; }
+function cargaNova(s, span, e){ const L = limiteSem(e, span.rFim), at = cargaAtual(e); return at > 0 ? Math.min(at, L) : L; }
+function horaDia(s, span, e){ return Math.min(capDia(s, e), cargaNova(s, span, e) / 5); }
+function trabalhaFeriado(s){ return s.abreFeriado && (s.setor !== 'comercio' || s.ferAut); }
+function fechadoGer(s, d){ return !s.aberto[d.wd] || (d.feriado && !trabalhaFeriado(s)); }
+function fechadoAtual(s, d){ return !s.aberto[d.wd] || (d.feriado && !s.abreFeriado); }
 
 /* ---------- Validação de um colaborador ---------- */
-function validar(s, span, work, hours, e){
-  const { L, capDia } = params(s);
-  const N = nDomingo(s, e);
-  const out = [];
-  const err = m => out.push({ t: 'err', m }), warn = m => out.push({ t: 'warn', m });
-
-  let maxDia = 0;
-  work.forEach((w, i) => { if (w) maxDia = Math.max(maxDia, hours[i]); });
-  if (maxDia > capDia + EPS) err(`Jornada de ${fmtH(maxDia)} num dia, acima do teto de ${capDia}h${s.acordo ? ' (8h + 2h de compensação)' : ' sem acordo de compensação'}.`);
+function validar(s, span, e, work, segs, orig){
+  const out = [], err = m => out.push({ t: 'err', m }), warn = m => out.push({ t: 'warn', m });
+  const cap = capDia(s, e), N = nDomingo(s, e);
+  let maxDia = 0, noturno = 0, intra1 = [], intra15 = [], intraLong = [], ferTrab = [], folgaTrab = [];
+  span.days.forEach((d, i) => {
+    if (!work[i]) return;
+    const sg = segs[i], tot = segMin(sg), g = maxGap(sg);
+    maxDia = Math.max(maxDia, tot);
+    if (tot > 360 && g < 60) intra1.push(d.dia); else if (tot > 240 && g < 15) intra15.push(d.dia);
+    if (g > 120) intraLong.push(d.dia);
+    if (d.inMonth) noturno += minNoturnos(sg);
+    if (d.feriado && d.inMonth) ferTrab.push(`${d.dia} (${d.feriado})`);
+    if (orig && !orig[i] && d.inMonth) folgaTrab.push(d.dia);
+  });
+  if (maxDia > cap * 60 + EPS) {
+    const why = s.comp === 'nenhuma' ? 'sem acordo de compensação' : (e.menor || e.insal) ? `${e.menor ? 'menor de 18 anos' : 'atividade insalubre'} só compensa com norma coletiva` : '8h + 2h de compensação';
+    err(`Jornada de ${fmtH(maxDia / 60)} num dia, acima do teto de ${cap}h (${why}).`);
+  }
+  if (intra1.length) err(`Intervalo menor que 1h em jornada acima de 6h — dia(s) ${lst(intra1)} (art. 71 da CLT).`);
+  if (intra15.length) err(`Intervalo menor que 15 min em jornada de 4h a 6h — dia(s) ${lst(intra15)} (art. 71, §1º).`);
+  if (intraLong.length) warn(`Intervalo acima de 2h no(s) dia(s) ${[...new Set(intraLong)].slice(0, 6).join(', ')}: exige acordo escrito ou norma coletiva (art. 71).`);
+  if (e.menor && e.insal) err('Menor de 18 anos não pode exercer atividade insalubre (art. 405, I, da CLT).');
+  if (noturno > 0) {
+    if (e.menor) err('Menor de 18 anos não pode trabalhar entre 22h e 5h (art. 404 da CLT).');
+    else warn(`${fmtH(noturno / 60)} em horário noturno no mês: adicional de 20% e hora reduzida de 52min30s (art. 73).`);
+  }
+  if (ferTrab.length) {
+    if (s.setor === 'comercio' && !s.ferAut) err(`Trabalho em feriado — ${ferTrab.join('; ')}. No comércio, depende de convenção coletiva (Lei 10.101/2000, art. 6º-A).`);
+    else warn(`Trabalho em feriado — ${ferTrab.join('; ')}: pagar em dobro ou dar folga compensatória (Lei 605/1949, art. 9º).`);
+  }
+  if (folgaTrab.length) warn(`Dia(s) ${lst(folgaTrab)} eram folga e viraram trabalho. Sem outra folga na mesma semana, paga-se em dobro (Súmula 146 do TST).`);
 
   let run = 0, maxRun = 0;
   work.forEach(w => { run = w ? run + 1 : 0; maxRun = Math.max(maxRun, run); });
-  if (maxRun > 6) err(`${maxRun} dias seguidos de trabalho. O máximo é 6 sem descanso.`);
+  if (maxRun > 6) err(`${maxRun} dias seguidos de trabalho. O máximo é 6 sem descanso (OJ 410 do TST).`);
 
-  const semPoucas = [], semHoras = [];
+  let lastEnd = null, dsrAcum = 0; const ij = [], dsrCurto = [];
+  span.days.forEach((d, i) => {
+    if (work[i]) {
+      const st = i * 1440 + segs[i][0][0], en = i * 1440 + segs[i][segs[i].length - 1][1];
+      if (lastEnd !== null && st - lastEnd < 660 + 1440 * dsrAcum) (dsrAcum ? dsrCurto : ij).push(d.dia);
+      lastEnd = en; dsrAcum = 0;
+    } else if (!d.feriado) dsrAcum++;
+  });
+  if (ij.length) err(`Menos de 11h de descanso entre jornadas antes do(s) dia(s) ${lst(ij)} (art. 66 da CLT).`);
+  if (dsrCurto.length) err(`Folga sem as 24h + 11h de descanso antes do(s) dia(s) ${lst(dsrCurto)} (Súmula 110 do TST).`);
+
+  const poucas = [], semHoras = [];
+  let transW = false;
   for (let w = 0; w < span.weeks; w++) {
-    let offs = 0, hrs = 0;
-    for (let k = 0; k < 7; k++) { const i = w * 7 + k; if (!work[i]) offs++; else hrs += hours[i]; }
-    if (offs < 2) semPoucas.push(w + 1);
-    if (hrs > L + EPS) semHoras.push(`${w + 1} (${fmtH(hrs)})`);
+    const r0 = regra(span.days[w * 7].date), r1 = regra(span.days[w * 7 + 6].date);
+    if (r0.L !== r1.L) transW = true;
+    const L = limiteSem(e, r0);
+    let dsr = 0, min = 0;
+    for (let k = 0; k < 7; k++) { const i = w * 7 + k; if (!work[i]) { if (!span.days[i].feriado) dsr++; } else min += segMin(segs[i]); }
+    if (dsr < r0.dsr) poucas.push(w + 1);
+    if (min / 60 > L + EPS) semHoras.push(`${w + 1} (${fmtH(min / 60)})`);
   }
-  if (!s.acordo) {
-    if (semPoucas.length) err(`Menos de 2 folgas na(s) semana(s) ${semPoucas.join(', ')}. Sem acordo coletivo, são 2 folgas em toda semana.`);
-    if (semHoras.length) err(`Acima de ${L}h na(s) semana(s) ${semHoras.join(', ')}.`);
-  } else if (semPoucas.length) {
-    warn(`Semana(s) ${semPoucas.join(', ')} com menos de 2 folgas — vale só pelo acordo, compensando dentro do mês.`);
+  if (poucas.length) {
+    if (!s.redist) err(`Repousos abaixo do mínimo na(s) semana(s) ${poucas.join(', ')} — feriado não conta como repouso semanal.`);
+    else warn(`Semana(s) ${poucas.join(', ')} com menos de 2 repousos — vale só pela norma coletiva, compensando no mês.`);
   }
+  if (semHoras.length && s.comp === 'nenhuma') err(`Acima do limite semanal na(s) semana(s) ${semHoras.join(', ')}, sem acordo de compensação.`);
 
-  let folgasMes = 0, horasMes = 0, domFolga = 0, domMes = 0;
+  let folgasMes = 0, horasMes = 0, minNovo = 0, diasNovo = 0, domFolga = 0, domMes = 0;
   span.days.forEach((d, i) => {
     if (!d.inMonth) return;
-    if (!work[i]) folgasMes++; else horasMes += hours[i];
+    const novo = regra(d.date).L === span.rFim.L;
+    if (!work[i]) { if (!d.feriado) folgasMes++; }
+    else { horasMes += segMin(segs[i]) / 60; if (novo) minNovo += segMin(segs[i]); }
+    if (novo) diasNovo++;
     if (d.wd === DOM) { domMes++; if (!work[i]) domFolga++; }
   });
-  const media = horasMes / (span.diasMes / 7);
-  if (s.acordo) {
-    const min = minFolgasMes(span.diasMes);
+  const media = diasNovo ? (minNovo / 60) / (diasNovo / 7) : 0, Lfim = limiteSem(e, span.rFim);
+  if (s.comp !== 'nenhuma' && media > Lfim + EPS) err(`Média de ${fmtH(media)} por semana no mês, acima de ${Lfim}h.`);
+  if (s.comp !== 'nenhuma' && semHoras.length && media <= Lfim + EPS) warn(`Semana(s) ${semHoras.join(', ')} acima do limite, compensadas na média do mês — guarde o acordo de compensação.`);
+  if (s.redist && !span.transicao) {
+    const min = span.diasMes >= 29 ? 9 : 8;
     if (folgasMes < min) err(`${folgasMes} folgas no mês. Com folgas redistribuídas, o mínimo é ${min}.`);
-    if (media > L + EPS) err(`Média de ${fmtH(media)} por semana no mês, acima de ${L}h.`);
   }
-
   if (s.aberto[DOM]) {
     let seq = 0, maxSeq = 0;
     span.days.forEach((d, i) => { if (d.wd === DOM) { seq = work[i] ? seq + 1 : 0; maxSeq = Math.max(maxSeq, seq); } });
     if (maxSeq >= N) err(`Trabalha ${maxSeq} domingos seguidos. Precisa folgar ao menos 1 a cada ${N}${e.mulher ? ' (revezamento quinzenal, art. 386 da CLT)' : ''}.`);
   }
-  return { issues: out, folgasMes, horasMes, media, domFolga, domMes, maxRun };
+  return { issues: out, folgasMes, horasMes, media, domFolga, domMes, noturno, transW };
 }
 
-function avaliar(s, span, works, hours){
-  const evals = s.emps.map((e, i) => validar(s, span, works[i], hours[i], e));
+function avaliar(s, span, works, segs, origs){
+  const evals = s.emps.map((e, i) => validar(s, span, e, works[i], segs[i], origs && origs[i]));
   const cov = span.days.map((d, i) => works.reduce((a, w) => a + (w[i] ? 1 : 0), 0));
   let deficit = 0;
-  span.days.forEach((d, i) => { if (d.inMonth && s.aberto[d.wd] && cov[i] < (s.minimo[d.wd] || 0)) deficit++; });
-  const erros = evals.reduce((a, v) => a + v.issues.filter(x => x.t === 'err').length, 0);
-  const avisos = evals.reduce((a, v) => a + v.issues.filter(x => x.t === 'warn').length, 0);
+  span.days.forEach((d, i) => { if (d.inMonth && !fechadoGer(s, d) && cov[i] < (s.minimo[d.wd] || 0)) deficit++; });
+  const cnt = t => evals.reduce((a, v) => a + v.issues.filter(x => x.t === t).length, 0);
   const domF = evals.reduce((a, v) => a + v.domFolga, 0), domT = evals.reduce((a, v) => a + v.domMes, 0);
-  return { works, hours, evals, cov, deficit, erros, avisos, domPct: domT ? domF / domT : 0 };
+  return { works, segs, evals, cov, deficit, erros: cnt('err'), avisos: cnt('warn'), domPct: domT ? domF / domT : 0 };
 }
 
 /* ---------- Escala atual repetida no mês ---------- */
 function escalaAtual(s, span){
-  const works = s.emps.map(e => span.days.map(d => (+e.horas[d.wd] || 0) > 0));
-  const hours = s.emps.map(e => span.days.map(d => +e.horas[d.wd] || 0));
-  return { works, hours };
+  const segs = s.emps.map(e => span.days.map(d => fechadoAtual(s, d) ? [] : parseHorario(e.hor[d.wd]).segs));
+  return { works: segs.map(r => r.map(sg => sg.length > 0)), segs };
 }
-function horasNovas(s, works){ return works.map((w, i) => w.map(x => x ? horaDia(s, s.emps[i]) : 0)); }
 
-/* ---------- Gerador A: folga fixa incluindo domingo ---------- */
+/* ---------- Horários da nova escala ---------- */
+function segsNovos(s, span, e, work, h){
+  const mo = modelo(e), H = Math.round((h ?? horaDia(s, span, e)) * 60);
+  let base = montarSegs(mo.ent, mo.int, H);
+  if (e.menor) { const fim = base[base.length - 1][1]; if (fim > 1320 || base[0][0] < 300) base = montarSegs(Math.max(300, Math.min(mo.ent, 1320 - (fim - base[0][0]))), mo.int, H); }
+  return work.map(w => w ? base : []);
+}
+
+/* ---------- Ajustes comuns ---------- */
+function fromWeekly(span, offsFn){ return span.days.map((d, i) => !offsFn(Math.floor(i / 7)).has(d.wd)); }
+function aplicarFechamentos(s, span, works){ works.forEach(w => span.days.forEach((d, i) => { if (fechadoGer(s, d)) w[i] = false; })); return works; }
+function covDe(span, works){ return span.days.map((d, i) => works.reduce((a, w) => a + (w[i] ? 1 : 0), 0)); }
+function repararSemanas(s, span, works){
+  const cov = covDe(span, works);
+  works.forEach(w => {
+    for (let wk = 0; wk < span.weeks; wk++) {
+      const need = regra(span.days[wk * 7].date).dsr > 1 || regra(span.days[wk * 7 + 6].date).dsr > 1 ? 2 : 1;
+      let dsr = 0;
+      for (let k = 0; k < 7; k++) { const i = wk * 7 + k; if (!w[i] && !span.days[i].feriado) dsr++; }
+      while (dsr < need) {
+        let bi = -1, bs = -Infinity;
+        for (let k = 0; k < 7; k++) {
+          const i = wk * 7 + k, d = span.days[i];
+          if (!w[i] || d.feriado) continue;
+          const sc = cov[i] - (s.minimo[d.wd] || 0) + ((i > 0 && !w[i - 1]) || (i < w.length - 1 && !w[i + 1]) ? 0.3 : 0);
+          if (sc > bs) { bs = sc; bi = i; }
+        }
+        if (bi < 0) break;
+        w[bi] = false; cov[bi]--; dsr++;
+      }
+    }
+  });
+  return works;
+}
+function garantirMinimoMensal(s, span, works){
+  if (span.transicao) return works;
+  const min = span.diasMes >= 29 ? 9 : 8, cov = covDe(span, works);
+  works.forEach(w => {
+    let f = span.days.reduce((a, d, i) => a + (d.inMonth && !w[i] && !d.feriado ? 1 : 0), 0);
+    while (f < min) {
+      let bi = -1, bs = -Infinity;
+      span.days.forEach((d, i) => { if (d.inMonth && w[i] && !d.feriado) { const sc = cov[i] - (s.minimo[d.wd] || 0); if (sc > bs) { bs = sc; bi = i; } } });
+      if (bi < 0) break;
+      w[bi] = false; cov[bi]--; f++;
+    }
+  });
+  return works;
+}
+const fechadosWd = s => [0,1,2,3,4,5,6].filter(d => !s.aberto[d]);
+const abertosWd = s => [0,1,2,3,4,5,6].filter(d => s.aberto[d]);
+const adj = (a, b) => Math.abs(a - b) === 1 || Math.abs(a - b) === 6;
+function pares(arr){ const r = []; for (let i = 0; i < arr.length; i++) for (let j = i + 1; j < arr.length; j++) r.push([arr[i], arr[j]]); return r; }
+
+/* ---------- Gerador A: folga fixa com domingo ---------- */
 function genFixas(s, span){
-  const base0 = new Set(fechados(s));
-  if (s.aberto[DOM]) base0.add(DOM);
+  const base0 = new Set(fechadosWd(s)); if (s.aberto[DOM]) base0.add(DOM);
   const cov = s.aberto.map(a => a ? s.emps.length : 0);
   return s.emps.map(() => {
-    let cands;
-    if (base0.size >= 2) cands = [[...base0]];
-    else cands = abertos(s).filter(d => !base0.has(d)).map(d => [...base0, d]);
-    let best = cands[0], bs = -Infinity;
+    const cands = base0.size >= 2 ? [[...base0]] : abertosWd(s).filter(d => !base0.has(d)).map(d => [...base0, d]);
+    let best = cands[0] || [...base0], bs = -Infinity;
     for (const c of cands) {
       const extra = c.filter(d => s.aberto[d] && d !== DOM);
       let sc = extra.reduce((a, d) => a + cov[d] - (s.minimo[d] || 0), 0);
-      if (extra.some(d => d === SAB || d === SEG)) sc += 0.5; // folga emendada no domingo
+      if (extra.some(d => d === SAB || d === SEG)) sc += 0.5;
       if (sc > bs) { bs = sc; best = c; }
     }
     best.forEach(d => { if (s.aberto[d]) cov[d]--; });
@@ -296,180 +531,212 @@ function genFixas(s, span){
 /* ---------- Gerador B: dia fixo + domingo em revezamento ---------- */
 function genRevez(s, span){
   if (!s.aberto[DOM]) return null;
-  const closedWk = fechados(s).filter(d => d !== DOM);
-  const opens = abertos(s).filter(d => d !== DOM);
+  const closedWk = fechadosWd(s).filter(d => d !== DOM), opens = abertosWd(s).filter(d => d !== DOM);
   if (opens.length < 2 && !closedWk.length) return null;
-  const covExp = s.aberto.map(a => a ? s.emps.length : 0);
-  const fase = {};
-  return s.emps.map((e, i) => {
+  const covExp = s.aberto.map(a => a ? s.emps.length : 0), fase = {};
+  return s.emps.map(e => {
     const N = nDomingo(s, e);
     fase[N] = (fase[N] ?? -1) + 1;
-    const p = fase[N] % N;
-    const domOff = w => (w + p) % N === 0;
+    const p = fase[N] % N, domOff = w => (w + p) % N === 0;
     const fC = closedWk.length ? [closedWk[0]] : opens;
     let best = null, bs = -Infinity;
     for (const f of fC) for (const g of opens) {
       if (g === f) continue;
-      const offsFn = w => new Set([...closedWk, f, domOff(w) ? DOM : g]);
-      const work = fromWeekly(span, offsFn);
-      const hrs = work.map(x => x ? horaDia(s, e) : 0);
-      const errs = validar(s, span, work, hrs, e).issues.filter(x => x.t === 'err').length;
-      let sc = -1000 * errs;
+      const work = fromWeekly(span, w => new Set([...closedWk, f, domOff(w) ? DOM : g]));
+      const errs = validar(s, span, e, work, segsNovos(s, span, e, work)).issues.filter(x => x.t === 'err').length;
+      let sc = -1000 * errs + ((N - 1) / N) * (covExp[g] - (s.minimo[g] || 0));
       if (s.aberto[f]) sc += covExp[f] - (s.minimo[f] || 0);
-      sc += ((N - 1) / N) * (covExp[g] - (s.minimo[g] || 0));
       if (adj(f, g)) sc += 0.3;
       if (sc > bs) { bs = sc; best = { f, g, work }; }
     }
     if (s.aberto[best.f]) covExp[best.f] -= 1;
-    covExp[best.g] -= (N - 1) / N;
-    covExp[DOM] -= 1 / N;
+    covExp[best.g] -= (N - 1) / N; covExp[DOM] -= 1 / N;
     return best.work;
   });
 }
 
-/* ---------- Gerador C: otimizada por cobertura, semana a semana ---------- */
+/* ---------- Gerador C: otimizada por cobertura ---------- */
 function genOtim(s, span){
-  const E = s.emps.length;
-  const work = s.emps.map(() => Array(span.days.length).fill(true));
+  const E = s.emps.length, work = s.emps.map(() => Array(span.days.length).fill(true));
   const streak = Array(E).fill(0), domSeq = Array(E).fill(0);
-  const closed = fechados(s), opens = abertos(s);
-  const k = Math.max(0, 2 - closed.length);
+  const closed = fechadosWd(s), opens = abertosWd(s), k = Math.max(0, 2 - closed.length);
   const combos = k === 0 ? [[]] : k === 1 ? opens.map(d => [d]) : pares(opens);
   for (let w = 0; w < span.weeks; w++) {
+    const wds = span.days.slice(w * 7, w * 7 + 7).map(d => d.wd);
     const cov = s.aberto.map(a => a ? E : 0);
-    const order = [...Array(E).keys()].sort((a, b) => {
-      const na = nDomingo(s, s.emps[a]) - 1 - domSeq[a], nb = nDomingo(s, s.emps[b]) - 1 - domSeq[b];
-      return na - nb || ((a + w) % E) - ((b + w) % E);
-    });
+    const order = [...Array(E).keys()].sort((a, b) =>
+      (nDomingo(s, s.emps[a]) - 1 - domSeq[a]) - (nDomingo(s, s.emps[b]) - 1 - domSeq[b]) || ((a + w) % E) - ((b + w) % E));
     for (const i of order) {
       const N = nDomingo(s, s.emps[i]);
-      let best = null, bs = -Infinity, bestStreak = 0;
+      let best = null, bs = -Infinity, bestSt = 0;
       for (const c of combos) {
         const offs = new Set([...closed, ...c]);
         if (s.aberto[DOM] && domSeq[i] >= N - 1 && !offs.has(DOM)) continue;
         let st = streak[i], ok = true;
-        for (let d = 0; d < 7; d++) { if (offs.has(d)) st = 0; else if (++st > 6) { ok = false; break; } }
+        for (const wd of wds) { if (offs.has(wd)) st = 0; else if (++st > 6) { ok = false; break; } }
         if (!ok) continue;
         let sc = 0;
         for (const d of c) { sc += cov[d] - (s.minimo[d] || 0); if (cov[d] - 1 < (s.minimo[d] || 0)) sc -= 5; }
         if (c.length === 2 && adj(c[0], c[1])) sc += 0.3;
         if (c.includes(DOM)) sc += domSeq[i] * 0.6;
-        if (sc > bs) { bs = sc; best = offs; bestStreak = st; }
+        if (sc > bs) { bs = sc; best = offs; bestSt = st; }
       }
-      if (!best) { best = new Set([...closed, ...combos[0]]); bestStreak = 0; }
+      if (!best) { best = new Set([...closed, ...combos[0]]); bestSt = 0; }
       for (const d of best) if (s.aberto[d]) cov[d]--;
-      for (let d = 0; d < 7; d++) work[i][w * 7 + d] = !best.has(d);
-      streak[i] = bestStreak;
+      wds.forEach((wd, kk) => { work[i][w * 7 + kk] = !best.has(wd); });
+      streak[i] = bestSt;
       if (s.aberto[DOM]) domSeq[i] = best.has(DOM) ? 0 : domSeq[i] + 1;
     }
   }
   return work;
 }
 
-/* ---------- Gerador D: semana longa / semana curta (exige acordo) ---------- */
+/* ---------- Gerador D: semana longa / curta (norma coletiva) ---------- */
 function genAlternada(s, span){
-  if (!s.acordo) return null;
-  const closed = fechados(s);
-  const offsA = new Set([...closed, DOM]);
-  const offsB = new Set([...closed, SEG, SAB, DOM]);
-  return s.emps.map((e, i) => fromWeekly(span, w => ((w + i) % 2 === 0 ? offsA : offsB)));
+  if (!s.redist) return null;
+  const closed = fechadosWd(s);
+  const A = new Set([...closed, DOM]), B = new Set([...closed, SEG, SAB, DOM]);
+  return s.emps.map((e, i) => fromWeekly(span, w => ((w + i) % 2 === 0 ? A : B)));
 }
-
-/* ---------- Ajuste: mínimo de folgas no mês quando há acordo ---------- */
-function garantirMinimoMensal(s, span, works){
-  const min = minFolgasMes(span.diasMes);
-  const cov = span.days.map((d, i) => works.reduce((a, w) => a + (w[i] ? 1 : 0), 0));
-  works.forEach(w => {
-    let folgas = span.days.reduce((a, d, i) => a + (d.inMonth && !w[i] ? 1 : 0), 0);
-    while (folgas < min) {
-      let bi = -1, bs = -Infinity;
-      span.days.forEach((d, i) => {
-        if (!d.inMonth || !w[i]) return;
-        const sc = cov[i] - (s.minimo[d.wd] || 0);
-        if (sc > bs) { bs = sc; bi = i; }
-      });
-      if (bi < 0) break;
-      w[bi] = false; cov[bi]--; folgas++;
-    }
-  });
-  return works;
-}
+function hAlternada(s, span, e){ return s.comp === 'nenhuma' ? Math.min(capDia(s, e), limiteSem(e, span.rFim) / 6) : horaDia(s, span, e); }
 
 const OPCOES = [
   { id: 'fixa', nome: 'Folga fixa com domingo', desc: 'Cada pessoa folga sempre nos mesmos 2 dias, um deles o domingo. A mais simples de controlar.', gen: genFixas },
-  { id: 'revez', nome: 'Revezamento dominical', desc: 'Um dia fixo de folga na semana + domingo em rodízio (3 ou 4 semanas; quinzenal para mulheres).', gen: genRevez },
-  { id: 'otim', nome: 'Otimizada por cobertura', desc: 'As folgas mudam a cada semana para manter o mínimo de pessoas por dia, respeitando domingos e limite de 6 dias seguidos.', gen: genOtim },
-  { id: 'alt', nome: 'Semana longa / semana curta', desc: 'Alterna 6 dias de trabalho com 4 dias e fim de semana de 3 dias. Só com acordo/convenção.', gen: genAlternada },
+  { id: 'revez', nome: 'Revezamento dominical', desc: 'Um dia fixo de folga + domingo em rodízio (3 ou 4 semanas; quinzenal para mulheres).', gen: genRevez },
+  { id: 'otim', nome: 'Otimizada por cobertura', desc: 'As folgas variam a cada semana para manter o mínimo de pessoas por dia.', gen: genOtim },
+  { id: 'alt', nome: 'Semana longa / semana curta', desc: 'Alterna 6 dias de trabalho com 4 dias e fim de semana de 3 dias. Só com norma coletiva.', gen: genAlternada, h: hAlternada },
 ];
 
 function gerarOpcoes(s, span){
   return OPCOES.map(o => {
     let works = o.gen(s, span);
     if (!works) return null;
-    if (s.acordo) works = garantirMinimoMensal(s, span, works);
-    return Object.assign({ id: o.id, nome: o.nome, desc: o.desc }, avaliar(s, span, works, horasNovas(s, works)));
+    aplicarFechamentos(s, span, works);
+    if (!s.redist) repararSemanas(s, span, works); else garantirMinimoMensal(s, span, works);
+    const segs = s.emps.map((e, i) => segsNovos(s, span, e, works[i], o.h ? o.h(s, span, e) : undefined));
+    return Object.assign({ id: o.id, nome: o.nome, desc: o.desc, base: works.map(w => w.slice()) }, avaliar(s, span, works, segs));
   }).filter(Boolean).sort((a, b) => a.erros - b.erros || a.deficit - b.deficit || b.domPct - a.domPct);
 }
 
-if (typeof module !== 'undefined') module.exports = { buildSpan, validar, avaliar, escalaAtual, gerarOpcoes, horaDia, cargaNova };
+/* ---------- Remuneração ---------- */
+function remuneracao(s, span, e){
+  const v = +e.sal || 0; if (!v) return null;
+  const at = cargaAtual(e) || 44, nv = cargaNova(s, span, e);
+  if (e.tipoRem === 'hora') {
+    const minHora = nv < at ? v * at / nv : v;
+    return { tipo: 'hora', at, nv, horaAtual: v, horaMin: minHora, horaDsr: minHora * 1.16667, mensal: minHora * nv * 5 };
+  }
+  return { tipo: 'mensal', at, nv, sal: v, divAt: Math.round(at * 5), divNv: Math.round(nv * 5), horaAt: v / (at * 5), horaNv: v / (nv * 5) };
+}
+
+if (typeof module !== 'undefined') module.exports = { diasFerias, CIDADES, buildSpan, validar, avaliar, escalaAtual, gerarOpcoes, segsNovos, parseHorario, remuneracao, horaDia, cargaNova, cargaAtual, regra };
 </script>
 
 <!-- ===================== INTERFACE ===================== -->
 <script>
 const $ = q => document.querySelector(q);
-const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const KEY = 'escala5x2v2';
+const H8 = '08:00-12:00 14:00-18:00', H4 = '08:00-12:00';
 
 function exemplo(){
   return {
-    setor: 'comercio', fase: '42', acordo: false, mes: '2027-01',
-    aberto: [true, true, true, true, true, true, true],
-    minimo: [3, 3, 3, 3, 3, 4, 2],
+    razao: '', cnpj: '', cidade: 'Paripiranga', uf: 'BA', ferLocais: '29/06, 30/11, 08/12',
+    setor: 'comercio', mes: '2027-01', semIni: '0', comp: 'nenhuma', redist: false, abreFeriado: false, ferAut: false,
+    aberto: [true, true, true, true, true, true, true], minimo: [3, 3, 3, 3, 3, 4, 2],
     emps: [
-      { nome: 'Ana', mulher: true,  horas: [8, 8, 8, 8, 8, 4, 0] },
-      { nome: 'Bruno', mulher: false, horas: [8, 8, 0, 8, 8, 8, 4] },
-      { nome: 'Carla', mulher: true,  horas: [8, 0, 8, 8, 8, 8, 4] },
-      { nome: 'Diego', mulher: false, horas: [0, 8, 8, 8, 8, 8, 4] },
-      { nome: 'Elaine', mulher: true, horas: [8, 8, 8, 8, 0, 8, 4] },
-      { nome: 'Fábio', mulher: false, horas: [8, 8, 8, 0, 8, 8, 4] },
+      { nome: 'Ana', cargo: 'Vendedora', mulher: true, menor: false, insal: false, parcial: false, tipoRem: 'mensal', sal: 1850, hor: [H8, H8, H8, H8, H8, H4, ''] },
+      { nome: 'Bruno', cargo: 'Vendedor', mulher: false, menor: false, insal: false, parcial: false, tipoRem: 'mensal', sal: 1850, hor: [H8, H8, '', H8, H8, H8, H4] },
+      { nome: 'Carla', cargo: 'Caixa', mulher: true, menor: false, insal: false, parcial: false, tipoRem: 'mensal', sal: 1700, hor: [H8, '', H8, H8, H8, H8, H4] },
+      { nome: 'Diego', cargo: 'Repositor', mulher: false, menor: false, insal: false, parcial: false, tipoRem: 'hora', sal: 8.5, hor: ['', H8, H8, H8, H8, H8, H4] },
+      { nome: 'Elaine', cargo: 'Caixa', mulher: true, menor: false, insal: false, parcial: false, tipoRem: 'mensal', sal: 1700, hor: [H8, H8, H8, H8, '', H8, H4] },
+      { nome: 'Fábio', cargo: 'Estoquista', mulher: false, menor: false, insal: false, parcial: false, tipoRem: 'mensal', sal: 1750, hor: [H8, H8, H8, '', H8, H8, H4] },
     ],
   };
 }
-function vazio(){ const e = exemplo(); e.emps = [{ nome: '', mulher: false, horas: [8, 8, 8, 8, 8, 4, 0] }]; return e; }
-function load(){ try { return JSON.parse(localStorage.getItem('escala5x2')); } catch (e) { return null; } }
-function save(){ try { localStorage.setItem('escala5x2', JSON.stringify(S)); } catch (e) {} }
+function novoEmp(){ return { nome: '', cargo: '', mulher: false, menor: false, insal: false, parcial: false, tipoRem: 'mensal', sal: '', hor: [H8, H8, H8, H8, H8, '', ''] }; }
+function vazio(){ const e = exemplo(); e.emps = [novoEmp()]; return e; }
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
-let S = load() || exemplo();
-let RES = null, SEL = null;
+let S = Object.assign(exemplo(), load() || {});
+let RES = null, SEL = null, CUR = null;
+const CAMPOS = ['razao', 'cnpj', 'cidade', 'uf', 'ferLocais', 'setor', 'mes', 'semIni', 'comp'];
+const cidadeIdx = () => CIDADES.findIndex(c => c[0] === S.cidade && c[1] === S.uf);
+const CHECKS = ['redist', 'abreFeriado', 'ferAut'];
 
+function syncDeps(){
+  if (S.comp !== 'coletiva') S.redist = false;
+  $('#redist').disabled = S.comp !== 'coletiva'; $('#redistBox').classList.toggle('dis', S.comp !== 'coletiva');
+  const fa = S.setor === 'comercio' && S.abreFeriado;
+  if (!fa) S.ferAut = false;
+  $('#ferAut').disabled = !fa; $('#ferAutBox').classList.toggle('dis', !fa);
+  $('#redist').checked = S.redist; $('#ferAut').checked = S.ferAut;
+  if (S.mes) {
+    const sp = buildSpan(S), lst = [];
+    sp.days.forEach(d => { if (d.inMonth && d.feriado) lst.push(`${pad(d.dia)}/${pad(sp.m)} ${d.feriado}`); });
+    $('#ferMes').textContent = lst.length ? 'Feriados no mês: ' + lst.join(' · ') : 'Nenhum feriado cadastrado neste mês.';
+  }
+}
+function renderCidade(){
+  const k = cidadeIdx();
+  $('#cidadeSel').innerHTML = CIDADES.map((c, i) => `<option value="${i}" ${i === k ? 'selected' : ''}>${esc(c[0])}/${c[1]}</option>`).join('') + `<option value="-1" ${k < 0 ? 'selected' : ''}>Outra cidade</option>`;
+  $('#cidade').style.display = k < 0 ? '' : 'none';
+  const c = CIDADES[k];
+  $('#ferFonte').textContent = !c ? 'Informe os feriados municipais da cidade abaixo.'
+    : c[3] === 'tj' ? 'Feriados municipais conforme o Decreto Judiciário TJBA nº 09/2026. Confira se houve lei municipal nova.'
+    : c[3] === 'ag' ? 'Feriados municipais pré-preenchidos a partir de calendários públicos — confira na lei municipal antes de usar.'
+    : 'Não encontrei fonte oficial dos feriados desta cidade: preencha com base na lei municipal.';
+}
 function renderParams(){
-  $('#setor').value = S.setor; $('#fase').value = S.fase; $('#mes').value = S.mes; $('#acordo').checked = S.acordo;
+  renderCidade();
+  CAMPOS.forEach(k => { $('#' + k).value = S[k] ?? ''; });
+  CHECKS.forEach(k => { $('#' + k).checked = !!S[k]; });
   const rows = document.querySelectorAll('.days-cfg tbody tr');
   rows[0].innerHTML = '<td class="l">Empresa abre?</td>' + DIAS.map((_, d) => `<td><input type="checkbox" data-ab="${d}" ${S.aberto[d] ? 'checked' : ''}></td>`).join('');
   rows[1].innerHTML = '<td class="l">Mínimo de pessoas</td>' + DIAS.map((_, d) => `<td><input type="number" min="0" data-mn="${d}" value="${S.minimo[d]}"></td>`).join('');
+  syncDeps();
 }
+function totalEmp(e){ const bad = e.hor.some(h => parseHorario(h).erro); return bad ? '<b style="color:var(--err)">Horário inválido</b>' : `Total: <b>${fmtH(cargaAtual(e))}</b> por semana`; }
 function renderEmps(){
   $('#emps').innerHTML = S.emps.map((e, i) => `
-    <tr data-i="${i}">
-      <td class="l"><input type="text" data-f="nome" value="${esc(e.nome)}" placeholder="Nome"></td>
-      <td><input type="checkbox" data-f="mulher" ${e.mulher ? 'checked' : ''}></td>
-      ${e.horas.map((h, d) => `<td><input type="number" min="0" max="24" step="0.5" data-h="${d}" value="${h}"></td>`).join('')}
-      <td class="tot"><b>${fmtH(soma(e.horas))}</b></td>
-      <td><button class="btn x" data-del="${i}" title="Remover">✕</button></td>
-    </tr>`).join('');
+  <div class="emp" data-i="${i}">
+    <div class="emp-top">
+      <input type="text" data-f="nome" value="${esc(e.nome)}" placeholder="Nome">
+      <input type="text" class="cargo" data-f="cargo" value="${esc(e.cargo)}" placeholder="Cargo">
+      <button class="btn x" data-del="${i}" title="Remover">✕</button>
+    </div>
+    <div class="chips">
+      ${[['mulher', 'Mulher'], ['menor', 'Menor de 18'], ['insal', 'Atividade insalubre'], ['parcial', 'Tempo parcial']].map(([k, t]) =>
+        `<label class="check"><input type="checkbox" data-f="${k}" ${e[k] ? 'checked' : ''}><span>${t}</span></label>`).join('')}
+    </div>
+    <div class="rem">
+      <select data-f="tipoRem"><option value="mensal" ${e.tipoRem !== 'hora' ? 'selected' : ''}>Mensalista</option><option value="hora" ${e.tipoRem === 'hora' ? 'selected' : ''}>Horista</option></select>
+      <input type="number" step="0.01" min="0" data-f="sal" value="${esc(e.sal)}" placeholder="${e.tipoRem === 'hora' ? 'Valor-hora (R$)' : 'Salário (R$)'}">
+    </div>
+    <div class="hor">${DIAS.map((dn, d) => `<label>${dn}<input type="text" data-h="${d}" value="${esc(e.hor[d])}" placeholder="folga" class="${parseHorario(e.hor[d]).erro ? 'bad' : ''}"></label>`).join('')}</div>
+    <div class="emp-foot"><span class="tot">${totalEmp(e)}</span><button class="btn ghost sm" data-rep="${i}">Repetir segunda de terça a sexta</button></div>
+  </div>`).join('');
 }
 
 document.addEventListener('input', ev => {
   const t = ev.target;
-  if (t.id === 'setor' || t.id === 'fase' || t.id === 'mes') S[t.id] = t.value;
-  else if (t.id === 'acordo') S.acordo = t.checked;
+  if (t.id === 'cidadeSel') {
+    const c = CIDADES[+t.value];
+    if (c) { S.cidade = c[0]; S.uf = c[1]; S.ferLocais = c[2]; } else { S.cidade = ''; S.ferLocais = ''; }
+    renderParams();
+  }
+  else if (CAMPOS.includes(t.id)) { S[t.id] = t.value; if (t.id === 'uf') renderCidade(); syncDeps(); }
+  else if (CHECKS.includes(t.id)) { S[t.id] = t.checked; syncDeps(); }
   else if (t.dataset.ab) S.aberto[+t.dataset.ab] = t.checked;
   else if (t.dataset.mn) S.minimo[+t.dataset.mn] = Math.max(0, +t.value || 0);
   else {
-    const tr = t.closest('#emps tr'); if (!tr) return;
-    const e = S.emps[+tr.dataset.i];
-    if (t.dataset.f === 'nome') e.nome = t.value;
-    else if (t.dataset.f === 'mulher') e.mulher = t.checked;
-    else if (t.dataset.h) { e.horas[+t.dataset.h] = Math.max(0, +t.value || 0); tr.querySelector('.tot').innerHTML = `<b>${fmtH(soma(e.horas))}</b>`; }
+    const box = t.closest('.emp'); if (!box) return;
+    const e = S.emps[+box.dataset.i];
+    if (t.dataset.f) e[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value;
+    if (t.dataset.f === 'tipoRem') t.nextElementSibling.placeholder = t.value === 'hora' ? 'Valor-hora (R$)' : 'Salário (R$)';
+    if (t.dataset.h) { e.hor[+t.dataset.h] = t.value; t.classList.toggle('bad', !!parseHorario(t.value).erro); }
+    box.querySelector('.tot').innerHTML = totalEmp(e);
   }
   save();
 });
@@ -477,132 +744,252 @@ document.addEventListener('change', ev => { if (ev.target.type === 'checkbox' ||
 document.addEventListener('click', ev => {
   const t = ev.target;
   if (t.dataset.del) { S.emps.splice(+t.dataset.del, 1); renderEmps(); save(); }
-  if (t.closest('.opt')) { SEL = t.closest('.opt').dataset.id; renderSaida(); }
+  if (t.dataset.rep) { const e = S.emps[+t.dataset.rep]; for (let d = 1; d <= 4; d++) e.hor[d] = e.hor[0]; renderEmps(); save(); }
+  if (t.closest('.opt')) { SEL = t.closest('.opt').dataset.id; CUR = null; renderSaida(); }
+  const cell = t.closest('td.ed');
+  if (cell) { const e = +cell.dataset.e, i = +cell.dataset.i; editar(e, i); }
+  if (t.id === 'desfazer') { CUR = null; renderSaida(); }
+  if (t.dataset.ferias) { balaoFerias(+t.dataset.ferias, t); return; }
+  if (t.closest('.fechar') || (!t.closest('.balao') && $('.balao'))) fecharBalao();
+  if (t.id === 'csv') baixarCSV();
+  if (t.id === 'copiar') copiar(t);
+  if (t.id === 'prEscala') imprimir(docEscala());
+  if (t.id === 'prTermos') imprimir(docTermos());
 });
-$('#add').onclick = () => { S.emps.push({ nome: '', mulher: false, horas: [8, 8, 8, 8, 8, 0, 0] }); renderEmps(); save(); };
+$('#add').onclick = () => { S.emps.push(novoEmp()); renderEmps(); save(); };
 $('#exemplo').onclick = () => { S = exemplo(); renderParams(); renderEmps(); save(); $('#saida').innerHTML = ''; };
 $('#limpar').onclick = () => { S = vazio(); renderParams(); renderEmps(); save(); $('#saida').innerHTML = ''; };
 $('#rodar').onclick = () => {
-  if (!S.emps.length) { alertBox('Cadastre ao menos um colaborador.'); return; }
-  if (!S.mes) { alertBox('Escolha o mês da nova escala.'); return; }
+  if (!S.emps.length) return aviso('Cadastre ao menos um colaborador.');
+  if (!S.mes) return aviso('Escolha o mês da nova escala.');
+  const ruins = S.emps.filter(e => e.hor.some(h => parseHorario(h).erro));
+  if (ruins.length) return aviso('Corrija os horários marcados em vermelho. Use o formato 08:00-12:00 14:00-18:00.');
   S.emps.forEach((e, i) => { if (!e.nome.trim()) e.nome = 'Colaborador ' + (i + 1); });
   renderEmps(); save();
-  const span = buildSpan(S.mes);
-  const at = escalaAtual(S, span);
-  RES = { span, atual: avaliar(S, span, at.works, at.hours), opcoes: gerarOpcoes(S, span) };
-  SEL = RES.opcoes[0] ? RES.opcoes[0].id : null;
+  const span = buildSpan(S), at = escalaAtual(S, span);
+  RES = { span, atual: avaliar(S, span, at.works, at.segs), opcoes: gerarOpcoes(S, span) };
+  SEL = RES.opcoes[0] ? RES.opcoes[0].id : null; CUR = null;
   renderSaida();
   $('#saida').scrollIntoView({ behavior: 'smooth' });
 };
-function alertBox(m){ $('#saida').innerHTML = `<section class="card"><p class="note">${esc(m)}</p></section>`; }
+function aviso(m){ $('#saida').innerHTML = `<section class="card"><p class="note">${esc(m)}</p></section>`; }
+
+function selecionada(){
+  const base = RES.opcoes.find(o => o.id === SEL) || RES.opcoes[0];
+  if (!base) return null;
+  return CUR ? Object.assign({}, base, CUR) : base;
+}
+function editar(ei, i){
+  const sel = selecionada(), span = RES.span;
+  const works = sel.works.map(w => w.slice());
+  works[ei][i] = !works[ei][i];
+  const e = S.emps[ei], o = OPCOES.find(x => x.id === sel.id);
+  const segs = S.emps.map((emp, k) => segsNovos(S, span, emp, works[k], o.h ? o.h(S, span, emp) : undefined));
+  CUR = avaliar(S, span, works, segs, sel.base);
+  renderSaida();
+}
 
 function pillStatus(r){
   if (r.erros) return `<span class="pill err">${r.erros} irregularidade${r.erros > 1 ? 's' : ''}</span>`;
   if (r.avisos) return `<span class="pill warn">${r.avisos} ponto${r.avisos > 1 ? 's' : ''} de atenção</span>`;
   return `<span class="pill ok">Dentro das regras</span>`;
 }
-function issuesHtml(list){
-  if (!list.length) return '<span class="pill ok">OK</span>';
-  return `<ul class="issues">${list.map(x => `<li class="${x.t}">${esc(x.m)}</li>`).join('')}</ul>`;
-}
+function issuesHtml(list){ return list.length ? `<ul class="issues">${list.map(x => `<li class="${x.t}">${esc(x.m)}</li>`).join('')}</ul>` : '<span class="pill ok">OK</span>'; }
+function nomeMes(span){ return new Date(span.y, span.m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); }
 
 function renderSaida(){
   if (!RES) return;
-  const { span, atual, opcoes } = RES;
-  const { L } = params(S);
-  const nomeMes = new Date(span.y, span.m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const { span, atual } = RES, sel = selecionada();
+  const trans = span.transicao ? `<p class="info">Mês de transição: até ${fmtData(new Date(span.inicioNovo.getTime() - 864e5))} vale a regra anterior; de ${fmtData(span.inicioNovo)} em diante, ${esc(span.rFim.nome)}. A semana que atravessa a data é avaliada pela regra anterior. A nova escala já é gerada com 2 folgas em todas as semanas.</p>` : '';
 
   const diag = `
   <section class="card">
-    <h2>3. Diagnóstico da escala atual <small>— repetida em ${esc(nomeMes)}, nas regras novas</small></h2>
+    <h2>3. Diagnóstico da escala atual <small>— repetida em ${esc(nomeMes(span))}</small></h2>
+    ${trans}
     <p>${pillStatus(atual)} ${atual.deficit ? `<span class="pill warn">${atual.deficit} dia(s) abaixo do mínimo de pessoas</span>` : ''}</p>
     <div class="scroll"><table>
-      <thead><tr><th class="l">Colaborador(a)</th><th>Horas/semana hoje</th><th>Folgas/semana</th><th>Nova carga</th><th class="l">O que precisa mudar</th></tr></thead>
-      <tbody>${S.emps.map((e, i) => {
-        const fs = e.horas.filter(h => !(+h > 0)).length;
-        return `<tr><td class="l"><b>${esc(e.nome)}</b></td><td>${fmtH(soma(e.horas))}</td><td>${fs}</td>
-          <td>${fmtH(cargaNova(S, e))}/sem<br><span class="muted small">${fmtH(horaDia(S, e))}/dia em 5 dias</span></td>
-          <td class="l">${issuesHtml(atual.evals[i].issues)}</td></tr>`;
-      }).join('')}</tbody>
+      <thead><tr><th class="l">Colaborador(a)</th><th>Hoje</th><th>Nova carga</th><th class="l">O que precisa mudar</th></tr></thead>
+      <tbody>${S.emps.map((e, i) => `<tr><td class="l"><b>${esc(e.nome)}</b><br><span class="muted small">${esc(e.cargo)}</span></td>
+        <td>${fmtH(cargaAtual(e))}/sem<br><span class="muted small">${e.hor.filter(h => !parseHorario(h).segs.length).length} folga(s)</span></td>
+        <td>${fmtH(cargaNova(S, span, e))}/sem<br><span class="muted small">${fmtH(horaDia(S, span, e))}/dia em 5 dias</span></td>
+        <td class="l">${issuesHtml(atual.evals[i].issues)}</td></tr>`).join('')}</tbody>
     </table></div>
-    <p class="muted small">Salário mensal não pode ser reduzido. Para horistas, o novo divisor é ${L === 42 ? 210 : 200}. ${S.acordo ? '' : 'Sem acordo de compensação, 5 dias × 8h = 40h por semana — abaixo do limite de ' + L + 'h.'}</p>
+    ${S.comp === 'nenhuma' ? `<p class="muted small">Sem acordo de compensação, 5 dias × 8h = 40h por semana, abaixo do limite de ${span.rFim.L}h. Com acordo individual escrito, dá para chegar a ${span.rFim.L}h (${fmtH(span.rFim.L / 5)} por dia).</p>` : ''}
   </section>`;
 
-  if (!opcoes.length) { $('#saida').innerHTML = diag; return; }
-  const sel = opcoes.find(o => o.id === SEL) || opcoes[0];
+  if (!sel) { $('#saida').innerHTML = diag; return; }
 
-  const cards = opcoes.map((o, k) => `
+  const cards = RES.opcoes.map((o, k) => `
     <button class="opt ${o.id === sel.id ? 'sel' : ''}" data-id="${o.id}">
       ${k === 0 ? '<span class="pill ok rec">Recomendada</span>' : ''}
-      <h3>${esc(o.nome)}</h3>
-      <p>${esc(o.desc)}</p>
-      ${pillStatus(o)}<br>
+      <h3>${esc(o.nome)}</h3><p>${esc(o.desc)}</p>${pillStatus(o)}<br>
       <span class="small muted">${o.deficit ? `<b style="color:var(--err)">${o.deficit}</b> dia(s) abaixo do mínimo` : 'Cobertura mínima atendida'} · ${Math.round(o.domPct * 100)}% dos domingos de folga</span>
     </button>`).join('');
 
-  const head = span.days.map(d => `<th class="${d.wd === DOM ? 'sun' : ''} ${d.inMonth ? '' : 'out'}">${DIAS[d.wd].slice(0, 3)}<br>${d.dia}</th>`).join('');
-  const rows = S.emps.map((e, i) => {
-    const w = sel.works[i], h = sel.hours[i], v = sel.evals[i];
+  const head = span.days.map(d => `<th class="${d.wd === DOM ? 'sun' : ''} ${d.inMonth ? '' : 'out'} ${d.feriado ? 'fer' : ''}" title="${esc(d.feriado || '')}">${DIAS[d.wd]}<br>${d.dia}${d.feriado ? '*' : ''}</th>`).join('');
+  const rows = S.emps.map((e, ei) => {
+    const w = sel.works[ei], v = sel.evals[ei];
     const cells = span.days.map((d, j) => {
-      const cls = [d.inMonth ? '' : 'out'];
-      if (!S.aberto[d.wd]) return `<td class="c ${cls}">—</td>`;
-      if (!w[j]) return `<td class="f ${cls} ${d.wd === DOM ? '' : ''}">F</td>`;
-      return `<td class="t ${d.wd === DOM ? 'sun' : ''} ${cls}">${fmtH(h[j])}</td>`;
+      const o = d.inMonth ? '' : 'out', mod = w[j] !== sel.base[ei][j] ? 'mod' : '';
+      if (fechadoGer(S, d)) return `<td class="${d.feriado ? 'h' : 'c'} ${o}">${d.feriado ? 'FR' : '—'}</td>`;
+      if (!w[j]) return `<td class="f ed ${o} ${mod}" data-e="${ei}" data-i="${j}">F</td>`;
+      return `<td class="t ed ${d.wd === DOM ? 'sun' : ''} ${d.feriado ? 'h' : ''} ${o} ${mod}" data-e="${ei}" data-i="${j}">${fmtH(segMin(sel.segs[ei][j]) / 60)}</td>`;
     }).join('');
-    return `<tr><td class="l">${esc(e.nome)}${e.mulher ? ' <span class="muted small">(F)</span>' : ''}</td>${cells}
+    const sg = sel.segs[ei].find(x => x.length) || [];
+    return `<tr><td class="l"><button class="nomebtn" data-ferias="${ei}" title="Ver dias para início de férias">${esc(e.nome)}</button><br><span class="muted small">${fmtSegs(sg)}</span></td>${cells}
       <td class="small">${v.folgasMes}</td><td class="small">${v.domFolga}/${v.domMes}</td><td class="small">${fmtH(v.media)}</td></tr>`;
   }).join('');
   const covRow = span.days.map((d, j) => {
-    if (!S.aberto[d.wd]) return `<td class="c ${d.inMonth ? '' : 'out'}">—</td>`;
-    const low = sel.cov[j] < (S.minimo[d.wd] || 0);
-    return `<td class="${low ? 'low' : ''} ${d.inMonth ? '' : 'out'}">${sel.cov[j]}</td>`;
+    if (fechadoGer(S, d)) return `<td class="c ${d.inMonth ? '' : 'out'}">—</td>`;
+    return `<td class="${sel.cov[j] < (S.minimo[d.wd] || 0) ? 'low' : ''} ${d.inMonth ? '' : 'out'}">${sel.cov[j]}</td>`;
   }).join('');
   const probs = S.emps.map((e, i) => sel.evals[i].issues.length ? `<p style="margin:8px 0 0"><b>${esc(e.nome)}</b></p>${issuesHtml(sel.evals[i].issues)}` : '').join('');
 
   const opts = `
   <section class="card">
-    <h2>4. Opções de nova escala <small>— ${esc(nomeMes)}</small></h2>
+    <h2>4. Opções de nova escala <small>— ${esc(nomeMes(span))}</small></h2>
     <div class="opts">${cards}</div>
-    <div class="row no-print" style="justify-content:space-between">
-      <b>${esc(sel.nome)}</b>
-      <span class="row"><button class="btn ghost" id="copiar">Copiar para Excel</button><button class="btn ghost" id="csv">Baixar CSV</button><button class="btn ghost" onclick="window.print()">Imprimir</button></span>
-    </div>
-    <div class="legend"><span style="--c:var(--ok-soft)">F = folga</span><span style="--c:var(--sun)">Domingo trabalhado</span><span style="--c:var(--off)">Empresa fechada</span><span style="--c:var(--err-soft)">Abaixo do mínimo</span><span>Dias esmaecidos: fora do mês</span></div>
+    <p class="muted small">Toque no <b>nome</b> para ver os dias em que a pessoa pode começar as férias. Toque num dia para trocar trabalho ↔ folga. A ferramenta revalida na hora e marca o que foi alterado.</p>
+    <div class="legend"><span style="--c:var(--ok-soft)">F = folga</span><span style="--c:var(--hol)">FR / roxo = feriado</span><span style="--c:var(--sun)">Domingo trabalhado</span><span style="--c:var(--off)">Fechado</span><span style="--c:var(--err-soft)">Abaixo do mínimo</span></div>
     <div class="scroll"><table class="cal">
       <thead><tr><th class="l">Colaborador(a)</th>${head}<th>Folgas no mês</th><th>Domingos de folga</th><th>Média/sem</th></tr></thead>
       <tbody>${rows}<tr class="cov"><td class="l">Pessoas no dia</td>${covRow}<td colspan="3"></td></tr></tbody>
     </table></div>
+    ${CUR ? '<p><button class="btn ghost sm" id="desfazer">Desfazer ajustes manuais</button></p>' : ''}
     ${probs ? `<div style="margin-top:12px"><b>Pontos a revisar nesta opção</b>${probs}</div>` : '<p style="margin-top:12px"><span class="pill ok">Todos os colaboradores dentro das regras verificadas</span></p>'}
-    ${sel.deficit ? `<p class="note" style="margin-top:12px">Faltam pessoas em ${sel.deficit} dia(s) do mês. Opções: reduzir o mínimo nesses dias, contratar, ou testar outra opção acima.</p>` : ''}
+    ${sel.deficit ? `<p class="note">Faltam pessoas em ${sel.deficit} dia(s) do mês. Dá para reduzir o mínimo nesses dias, contratar ou testar outra opção.</p>` : ''}
   </section>`;
 
-  $('#saida').innerHTML = diag + opts;
-  $('#csv').onclick = () => baixarCSV(sel);
-  $('#copiar').onclick = async ev => {
-    const txt = linhasTabela(sel).map(l => l.join('\t')).join('\n');
-    try { await navigator.clipboard.writeText(txt); ev.target.textContent = 'Copiado ✓'; }
-    catch (e) { ev.target.textContent = 'Não foi possível copiar'; }
-    setTimeout(() => { ev.target.textContent = 'Copiar para Excel'; }, 2000);
-  };
+  const rem = S.emps.map(e => {
+    const r = remuneracao(S, span, e);
+    if (!r) return `<tr><td class="l">${esc(e.nome)}</td><td colspan="3" class="muted">Informe o salário para calcular</td></tr>`;
+    if (r.tipo === 'mensal') return `<tr><td class="l">${esc(e.nome)}<br><span class="muted small">Mensalista</span></td><td>${brl(r.sal)} (mantido)</td>
+      <td>${brl(r.horaAt)} → <b>${brl(r.horaNv)}</b><br><span class="muted small">divisor ${r.divAt} → ${r.divNv}</span></td><td>${brl(r.horaNv * 1.5)}</td></tr>`;
+    return `<tr><td class="l">${esc(e.nome)}<br><span class="muted small">Horista</span></td><td>${brl(r.mensal)} / mês estimado</td>
+      <td>${brl(r.horaAtual)} → <b>no mínimo ${brl(r.horaMin)}</b><br><span class="muted small">com DSR embutido (+16,667%): ${brl(r.horaDsr)}</span></td><td>${brl(r.horaMin * 1.5)}</td></tr>`;
+  }).join('');
+  const remSec = `
+  <section class="card">
+    <h2>5. Remuneração</h2>
+    <div class="scroll"><table>
+      <thead><tr><th class="l">Colaborador(a)</th><th>Salário</th><th>Salário-hora</th><th>Hora extra (50%)</th></tr></thead>
+      <tbody>${rem}</tbody></table></div>
+    <p class="muted small">A EC 141/2026 proíbe redução salarial nominal ou proporcional. Para o mensalista, o salário fica igual e o valor da hora sobe (divisor menor), o que encarece a hora extra. Para o horista, o valor-hora precisa subir na proporção da redução de horas. Divisores mais favoráveis já previstos em contrato ou norma coletiva continuam valendo.</p>
+  </section>`;
+
+  const docs = `
+  <section class="card">
+    <h2>6. Documentos</h2>
+    <div class="row">
+      <button class="btn pri" id="prEscala">Imprimir escala de revezamento</button>
+      <button class="btn" id="prTermos">Imprimir termos de alteração</button>
+      <button class="btn ghost" id="copiar">Copiar para Excel</button>
+      <button class="btn ghost" id="csv">Baixar CSV</button>
+    </div>
+    ${!S.razao || !S.cnpj ? '<p class="note">Preencha razão social e CNPJ no item 1 para sair nos documentos.</p>' : ''}
+    <p class="muted small">A escala mensal deve ficar afixada em local visível e disponível à fiscalização. Antes de trocar dia de folga ou horário, comunique o colaborador com antecedência e colha a assinatura no termo: mudança prejudicial sem concordância pode ser anulada (art. 468 da CLT).</p>
+  </section>`;
+
+  $('#saida').innerHTML = diag + opts + remSec + docs;
 }
 
-function linhasTabela(sel){
-  const { span } = RES;
+/* ---------- Balão de férias ---------- */
+function fecharBalao(){ const b = $('.balao'); if (b) b.remove(); }
+function balaoFerias(ei, anchor){
+  fecharBalao();
+  const { span } = RES, sel = selecionada(), e = S.emps[ei];
+  const dias = diasFerias(S, span, sel.works[ei]);
+  const ferMes = span.days.filter(d => d.inMonth && d.feriado).map(d => `${d.dia} (${d.feriado})`);
+  const b = document.createElement('div');
+  b.className = 'balao';
+  b.innerHTML = `<button class="btn x fechar" aria-label="Fechar">✕</button>
+    <h4>Férias de ${esc(e.nome)} — ${esc(nomeMes(span))}</h4>
+    <span class="muted small">Dias em que as férias podem começar, pela escala escolhida:</span>
+    <div class="dias">${dias.length ? dias.map(d => `<span>${DIAS[d.wd]} ${pad(d.dia)}</span>`).join('') : '<em class="muted small">Nenhum dia possível neste mês.</em>'}</div>
+    <ul>
+      <li>Não pode começar nos 2 dias antes de folga ou feriado, nem num dia que já seja folga ou feriado (art. 134, §3º, da CLT).</li>
+      ${ferMes.length ? `<li>Feriados considerados: ${esc(ferMes.join('; '))}.</li>` : ''}
+      <li>Pode dividir em até 3 períodos, se o empregado concordar: um com pelo menos 14 dias e os outros com pelo menos 5 (art. 134, §1º).</li>
+      <li>Avise por escrito com 30 dias de antecedência (art. 135) e pague até 2 dias antes do início (art. 145).</li>
+      ${e.menor ? '<li>Menor de 18 anos estudante: as férias devem coincidir com as férias escolares (art. 136, §2º).</li>' : ''}
+    </ul>`;
+  document.body.appendChild(b);
+  const r = anchor.getBoundingClientRect(), w = b.offsetWidth;
+  b.style.top = (window.scrollY + r.bottom + 8) + 'px';
+  b.style.left = Math.max(8, Math.min(window.scrollX + r.left, window.scrollX + document.documentElement.clientWidth - w - 8)) + 'px';
+}
+
+/* ---------- Documentos ---------- */
+function inicioVigencia(span){ return span.first < span.inicioNovo ? span.inicioNovo : span.first; }
+function docEscala(){
+  const { span } = RES, sel = selecionada();
   const idx = span.days.map((d, i) => i).filter(i => span.days[i].inMonth);
-  const head = ['Colaborador', ...idx.map(i => `${DIAS[span.days[i].wd]} ${span.days[i].dia}`), 'Folgas no mês', 'Média semanal'];
-  const lines = [head];
+  const head = idx.map(i => { const d = span.days[i]; return `<th>${DIAS[d.wd].slice(0, 1)}<br>${d.dia}${d.feriado ? '*' : ''}</th>`; }).join('');
+  const rows = S.emps.map((e, ei) => {
+    const sg = sel.segs[ei].find(x => x.length) || [];
+    return `<tr><td class="l">${esc(e.nome)}</td><td class="l">${esc(e.cargo)}</td><td class="l">${fmtSegs(sg)}</td>${idx.map(i => {
+      const d = span.days[i]; return `<td>${fechadoGer(S, d) ? (d.feriado ? 'FR' : '—') : sel.works[ei][i] ? 'T' : 'F'}</td>`; }).join('')}</tr>`;
+  }).join('');
+  const fer = idx.filter(i => span.days[i].feriado).map(i => `${span.days[i].dia} – ${span.days[i].feriado}`).join('; ');
+  return `<div class="doc">
+    <h1>ESCALA DE REVEZAMENTO — ${esc(nomeMes(span).toUpperCase())}</h1>
+    <p class="meta"><b>Empregador:</b> ${esc(S.razao || '________________')} &nbsp; <b>CNPJ:</b> ${esc(S.cnpj || '________________')} &nbsp; <b>Local:</b> ${esc(S.cidade)}${S.uf ? '/' + S.uf : ''}</p>
+    <p class="meta"><b>Regime:</b> ${esc(span.rFim.nome)} — EC 141/2026, Decreto 13.173/2026 e Portaria MTE 2.041/2026. <b>Atividade:</b> ${S.setor === 'comercio' ? 'comércio' : 'demais atividades'}.</p>
+    <table><thead><tr><th class="l">Colaborador(a)</th><th class="l">Cargo</th><th class="l">Horário</th>${head}</tr></thead><tbody>${rows}</tbody></table>
+    <p class="meta">Legenda: T = trabalho · F = repouso semanal · FR = feriado · — = estabelecimento fechado. ${fer ? '* Feriados: ' + esc(fer) + '.' : ''}</p>
+    <table class="ass"><thead><tr><th class="l" style="width:35%">Colaborador(a)</th><th style="width:40%">Assinatura (ciência da escala)</th><th>Data</th></tr></thead>
+      <tbody>${S.emps.map(e => `<tr><td class="l">${esc(e.nome)}</td><td></td><td></td></tr>`).join('')}</tbody></table>
+    <p class="meta">Escala afixada em ___/___/______. Responsável: ______________________________</p>
+  </div>`;
+}
+function docTermos(){
+  const { span } = RES, sel = selecionada(), ini = inicioVigencia(span);
+  return S.emps.map((e, ei) => {
+    const sg = sel.segs[ei].find(x => x.length) || [], carga = fmtH(cargaNova(S, span, e)), r = remuneracao(S, span, e), N = nDomingo(S, e);
+    const remTxt = !r ? 'Fica mantida a remuneração mensal atualmente contratada, sem qualquer redução.'
+      : r.tipo === 'mensal' ? `Fica mantido o salário mensal de ${brl(r.sal)}, sem qualquer redução nominal ou proporcional.`
+      : `Para preservar a remuneração mensal, o valor-hora passa de ${brl(r.horaAtual)} para ${brl(r.horaMin)}.`;
+    const compTxt = S.comp === 'individual' && segMin(sg) > 480 ? `<p><b>4. Compensação.</b> As horas que ultrapassarem 8 diárias, até o limite de 10, serão compensadas dentro do mesmo mês, nos termos do art. 59, §6º, da CLT.</p>` : '';
+    return `<div class="doc termo">
+      <h1>TERMO ADITIVO AO CONTRATO DE TRABALHO — JORNADA E ESCALA</h1>
+      <p><b>Empregador:</b> ${esc(S.razao || '______________________________')}, CNPJ ${esc(S.cnpj || '__________________')}.<br>
+      <b>Empregado(a):</b> ${esc(e.nome)}, cargo ${esc(e.cargo || '__________________')}.</p>
+      <p>Em razão da Emenda Constitucional nº 141/2026, do Decreto nº 13.173/2026 e da Portaria MTE nº 2.041/2026, as partes ajustam, a partir de ${fmtData(ini)}, o seguinte:</p>
+      <p><b>1. Jornada.</b> ${carga} semanais, em 5 dias de trabalho, no horário de ${fmtSegs(sg)}.</p>
+      <p><b>2. Repouso.</b> Dois dias de descanso por semana, de 24 horas consecutivas cada, conforme a escala mensal de revezamento afixada no estabelecimento${S.aberto[DOM] ? `, com folga aos domingos ao menos uma vez a cada ${N} semanas` : ''}.</p>
+      <p><b>3. Remuneração.</b> ${remTxt}</p>
+      ${compTxt}
+      <p><b>${compTxt ? 5 : 4}. Ciência.</b> O(a) empregado(a) declara ter sido comunicado(a) da alteração com antecedência e ter recebido cópia da escala do mês. As demais cláusulas do contrato continuam em vigor.</p>
+      <p>${esc(S.cidade || '__________')}, ____ de ______________ de ${ini.getFullYear()}.</p>
+      <div class="sign"><div>Empregador</div><div>Empregado(a)</div></div>
+    </div>`;
+  }).join('');
+}
+function imprimir(html){
+  $('#printArea').innerHTML = html;
+  try { window.print(); } catch (e) { aviso('A impressão não está disponível neste navegador.'); }
+}
+function linhasTabela(){
+  const { span } = RES, sel = selecionada();
+  const idx = span.days.map((d, i) => i).filter(i => span.days[i].inMonth);
+  const lines = [['Colaborador', 'Horário', ...idx.map(i => `${DIAS[span.days[i].wd]} ${span.days[i].dia}`), 'Folgas no mês', 'Média semanal']];
   S.emps.forEach((e, k) => {
-    lines.push([e.nome, ...idx.map(i => !S.aberto[span.days[i].wd] ? 'Fechado' : (sel.works[k][i] ? fmtH(sel.hours[k][i]) : 'Folga')), sel.evals[k].folgasMes, fmtH(sel.evals[k].media)]);
+    const sg = sel.segs[k].find(x => x.length) || [];
+    lines.push([e.nome, fmtSegs(sg), ...idx.map(i => fechadoGer(S, span.days[i]) ? (span.days[i].feriado ? 'Feriado' : 'Fechado') : sel.works[k][i] ? fmtH(segMin(sel.segs[k][i]) / 60) : 'Folga'), sel.evals[k].folgasMes, fmtH(sel.evals[k].media)]);
   });
-  lines.push(['Pessoas no dia', ...idx.map(i => sel.cov[i]), '', '']);
+  lines.push(['Pessoas no dia', '', ...idx.map(i => sel.cov[i]), '', '']);
   return lines;
 }
-function baixarCSV(sel){
-  const lines = linhasTabela(sel);
-  const csv = '﻿' + lines.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+async function copiar(btn){
+  try { await navigator.clipboard.writeText(linhasTabela().map(l => l.join('\t')).join('\n')); btn.textContent = 'Copiado ✓'; }
+  catch (e) { btn.textContent = 'Não foi possível copiar'; }
+  setTimeout(() => { btn.textContent = 'Copiar para Excel'; }, 2000);
+}
+function baixarCSV(){
+  const csv = '﻿' + linhasTabela().map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = `escala-5x2-${S.mes}-${sel.id}.csv`;
+  a.download = `escala-5x2-${S.mes}-${selecionada().id}.csv`;
   a.click();
 }
 

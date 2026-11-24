@@ -1,41 +1,38 @@
 # Planejador de Escala 5x2
 
-Ferramenta web (um único `index.html`, sem dependências) para montar escalas 5x2 de acordo com a **EC 141/2026**, o **Decreto 13.173/2026** e a **Portaria MTE 2.041/2026**.
+Ferramenta web (um único `index.html`, sem dependências) para montar escalas 5x2 conforme a **EC 141/2026**, o **Decreto 13.173/2026**, a **Portaria MTE 2.041/2026** e a CLT.
+
+**Acesse:** https://ufiscalcont-cmd.github.io/escala-5x2/
 
 ## O que faz
 
-1. Você informa a atividade (comércio ou demais), o limite semanal (42h ou 40h), se há acordo/convenção coletiva, os dias em que a empresa abre e o mínimo de pessoas por dia.
-2. Lança a **escala atual** de cada colaborador (horas por dia da semana, 0 = folga).
-3. A ferramenta:
-   - aponta o que a escala atual descumpre nas regras novas;
-   - gera até 4 opções de nova escala para o mês escolhido (folga fixa com domingo, revezamento dominical, otimizada por cobertura e, com acordo, semana longa/curta);
-   - mostra o calendário dia a dia, a cobertura por dia e os pontos a revisar;
-   - exporta CSV (abre no Excel) e imprime.
+1. **Empresa e regras:** cidade (com feriados municipais pré-preenchidos para as cidades atendidas), UF, atividade, mês, início da semana, tipo de compensação (nenhuma, acordo individual ou norma coletiva), redistribuição de folgas, funcionamento em feriados, dias de abertura e mínimo de pessoas por dia.
+2. **Escala atual:** horário de cada dia por colaborador (ex.: `08:00-12:00 14:00-18:00`), com perfil (mulher, menor de 18, insalubre, tempo parcial) e remuneração (mensalista ou horista).
+3. **Diagnóstico:** o que a escala atual descumpre nas regras novas.
+4. **Opções de nova escala:** até 4 modelos, com calendário editável (toque num dia para trocar trabalho/folga e revalidar). Toque no nome do colaborador para ver, num balão, os dias em que ele pode começar as férias.
+5. **Remuneração:** salário-hora com o divisor novo, hora extra e valor-hora mínimo do horista.
+6. **Documentos:** escala de revezamento para afixar e termos aditivos individuais, prontos para imprimir; exportação CSV e cópia para Excel.
 
-Os dados ficam salvos só no navegador de quem usa (localStorage).
+Os dados ficam salvos só no navegador de quem usa.
 
 ## Regras verificadas
 
-- 2 repousos semanais de 24h; no máximo 6 dias seguidos de trabalho.
-- Até 8h/dia e 42h/semana (a partir de 16/12/2026) ou 40h (a partir de 16/12/2027).
-- Com acordo/convenção: folgas redistribuídas no mês (mínimo 9 em meses de 29–31 dias, 8 em fevereiro), média mensal de horas e compensação até 10h/dia.
-- Domingo: 1 folga a cada 3 semanas no comércio, a cada 4 nas demais atividades; revezamento quinzenal para mulheres (art. 386 CLT).
+- Transição: regra anterior até 15/12/2026; 42h e 2 repousos a partir de 16/12/2026; 40h a partir de 16/12/2027.
+- 2 repousos semanais de 24h + 11h de interjornada (Súmula 110 TST); feriado não conta como repouso; máximo de 6 dias seguidos (OJ 410 TST).
+- Redistribuição de folgas no mês só com norma coletiva (mínimo 9 folgas em meses de 29–31 dias, 8 em fevereiro).
+- Compensação: sem acordo, 8h/dia; com acordo individual escrito (art. 59, §6º) ou norma coletiva, até 10h/dia e média mensal no limite. Menor e insalubre só com norma coletiva.
+- Intervalo intrajornada (art. 71), interjornada de 11h (art. 66), trabalho noturno (art. 73) e proibição para menores (arts. 404 e 405).
+- Domingos: comércio 1 a cada 3 semanas; demais 1 a cada 4; mulheres revezamento quinzenal (art. 386).
+- Feriados: comércio só com convenção (Lei 10.101/2000, art. 6º-A); demais, dobro ou folga compensatória (Lei 605/1949).
+- Folga trabalhada sem compensação: pagamento em dobro (Súmula 146 TST).
+- Férias: início vedado nos 2 dias que antecedem feriado ou repouso (art. 134, §3º).
 
-Fora do escopo: feriados, interjornada de 11h, 12x36, turnos ininterruptos, tempo parcial e cláusulas específicas de cada convenção.
+## Fontes dos feriados municipais
 
-## Publicar no GitHub Pages
+- Bahia: Decreto Judiciário TJBA nº 09/2026 (Paripiranga, Canavieiras, Cícero Dantas, Jeremoabo, Ribeira do Pombal).
+- Sergipe: calendários públicos — **conferir na lei municipal**.
+- Adustina, Aporá e Nossa Senhora do Socorro: sem fonte oficial localizada; preencher manualmente.
 
-1. Crie um repositório (ex.: `escala-5x2`) e envie o `index.html` e este `README.md` para a branch `main`.
-2. Em **Settings → Pages**, em *Source* escolha **Deploy from a branch**, branch `main`, pasta `/ (root)`, e salve.
-3. Em 1–2 minutos o site fica em `https://SEU-USUARIO.github.io/escala-5x2/`.
+Fora do escopo: 12x36, turnos ininterruptos, sobreaviso e cláusulas específicas de cada convenção.
 
-Pela linha de comando:
-
-```bash
-git init && git add . && git commit -m "Planejador de escala 5x2"
-git branch -M main
-git remote add origin https://github.com/SEU-USUARIO/escala-5x2.git
-git push -u origin main
-```
-
-> Ferramenta de apoio ao planejamento. Não substitui a leitura da Portaria 2.041/2026 nem da convenção coletiva da categoria.
+> Ferramenta de apoio ao planejamento. Não substitui a leitura da Portaria 2.041/2026 nem da norma coletiva da categoria.
