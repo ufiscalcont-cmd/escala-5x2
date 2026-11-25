@@ -119,23 +119,44 @@
   .balao ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted)}
   @media (max-width:600px){ .emp-top{grid-template-columns:minmax(0,1fr) auto} .emp-top .cargo{grid-column:1/2;grid-row:2} }
   @media print{
-    @page{size:A4 landscape;margin:12mm}
-    body{background:#fff}
+    html,body{background:#fff!important;margin:0!important;padding:0!important}
     body>*:not(#printArea){display:none!important}
-    #printArea{display:block!important;font:11px/1.4 Arial,sans-serif;color:#000}
-    .doc{page-break-after:always}
-    .doc:last-child{page-break-after:auto}
-    .doc h1{font-size:15px;margin:0 0 4px}
-    .doc .logo{height:34px;filter:invert(1);margin-bottom:6px}
-    .doc table{border-collapse:collapse;width:100%;margin:8px 0}
-    .doc th,.doc td{border:1px solid #444;padding:3px 2px;font-size:9.5px;text-align:center}
-    .doc td.l,.doc th.l{text-align:left}
-    .doc .meta{font-size:11px;margin:2px 0}
-    .doc .ass td{height:26px}
-    .doc.termo{font-size:12.5px;line-height:1.6;max-width:180mm}
-    .doc.termo p{margin:0 0 9px;text-align:justify}
-    .doc.termo .sign{display:flex;gap:40px;margin-top:40px}
-    .doc.termo .sign div{flex:1;border-top:1px solid #000;padding-top:4px;text-align:center}
+    #printArea{display:block!important;font:10pt/1.4 Arial,Helvetica,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .doc{box-sizing:border-box;break-after:page;page-break-after:always;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+    .doc:last-child{break-after:auto;page-break-after:auto}
+    .doc.escala{padding:12mm 14mm}
+    .doc.termo{padding:20mm 20mm 15mm 25mm;font-size:11pt;line-height:1.5}
+    .dhead{display:flex;justify-content:space-between;align-items:center;gap:12mm;padding-bottom:3mm;border-bottom:1.5pt solid #000;margin-bottom:4mm}
+    .dhead img{height:12mm;width:auto;filter:invert(1)}
+    .dhead .demp{text-align:right;font-size:9pt;line-height:1.35}
+    .dhead .demp b{font-size:11pt}
+    .doc h1{font-size:14pt;margin:0 0 3mm;letter-spacing:.2pt}
+    .doc.termo h1{text-align:center;font-size:13pt;margin:5mm 0 6mm}
+    .doc .meta{display:grid;grid-template-columns:auto 1fr;gap:1mm 4mm;font-size:9pt;margin:0 0 3mm}
+    .doc .meta b{white-space:nowrap}
+    .doc table{border-collapse:collapse;width:100%;margin:2mm 0 3mm;table-layout:fixed}
+    .doc thead{display:table-header-group}
+    .doc tr{break-inside:avoid;page-break-inside:avoid}
+    .doc th,.doc td{border:.6pt solid #555;padding:1.2mm .6mm;font-size:8pt;text-align:center;overflow:hidden}
+    .doc th{background:#e9e9e9;font-weight:700}
+    .doc th.dom,.doc td.dom{background:#f3f3f3}
+    .doc td.f{font-weight:700}
+    .doc td.fr{background:#e6e6e6;font-weight:700}
+    .doc td.l,.doc th.l{text-align:left;padding-left:1.5mm}
+    .doc .nota{font-size:8.5pt;margin:1mm 0}
+    .doc h2{font-size:10pt;margin:4mm 0 1mm}
+    .doc .ass td{height:10mm}
+    .doc .pg2{break-before:page;page-break-before:always}
+    .doc .dfoot{display:flex;justify-content:space-between;gap:8mm;margin-top:5mm;padding-top:2mm;border-top:.6pt solid #999;font-size:8pt;color:#444}
+    .doc.termo p{margin:0 0 3mm;text-align:justify}
+    .doc.termo .partes p{margin:0 0 2mm;text-align:left}
+    .doc.termo .local{text-align:right;margin-top:6mm}
+    .doc.termo .sign{display:grid;grid-template-columns:1fr 1fr;gap:10mm 16mm;margin-top:14mm;break-inside:avoid}
+    .doc.termo .sign div{border-top:.8pt solid #000;padding-top:1.5mm;text-align:center;font-size:10pt;line-height:1.35}
+    .doc.termo .test{margin-top:12mm}
+    .doc.termo .dfoot{margin-top:8mm}
+    .doc.escala th,.doc.escala td{padding:.9mm .5mm}
+    .doc.escala h2{margin:3mm 0 1mm}
   }
 </style>
 </head>
@@ -967,8 +988,8 @@ document.addEventListener('click', ev => {
   if (t.closest('.fechar') || (!t.closest('.balao') && $('.balao'))) fecharBalao();
   if (t.id === 'csv') baixarCSV();
   if (t.id === 'copiar') copiar(t);
-  if (t.id === 'prEscala') imprimir(docEscala());
-  if (t.id === 'prTermos') imprimir(docTermos());
+  if (t.id === 'prEscala') imprimir(docEscala(), 'landscape');
+  if (t.id === 'prTermos') imprimir(docTermos(), 'portrait');
 });
 /* ---------- Importar planilha ---------- */
 let XLSX_PROMISE = null;
@@ -1180,52 +1201,92 @@ function balaoFerias(ei, anchor){
 function funcTexto(){ return DIAS.map((dn, d) => `${dn} ${S.aberto[d] && S.func[d] && S.func[d][0] ? S.func[d][0] + '–' + S.func[d][1] : 'fechado'}`).join(' · '); }
 const LOGO_DOC = `<img class="logo" alt="uFiscal" src="${document.querySelector('.topo img').src}">`;
 function inicioVigencia(span){ return span.first < span.inicioNovo ? span.inicioNovo : span.first; }
+function cabecalhoDoc(){
+  return `<div class="dhead">${LOGO_DOC}<div class="demp"><b>${esc(S.razao || 'Razão social não informada')}</b><br>CNPJ ${esc(S.cnpj || '—')}<br>${esc(S.cidade || '')}${S.uf ? '/' + esc(S.uf) : ''}</div></div>`;
+}
+const rodapeDoc = extra => `<div class="dfoot"><span>${extra || ''}</span><span>Elaborado com o Planejador de Escala 5x2 · uFiscal — Inteligência em negócios</span></div>`;
 function docEscala(){
   const { span } = RES, sel = selecionada();
   const idx = span.days.map((d, i) => i).filter(i => span.days[i].inMonth);
-  const head = idx.map(i => { const d = span.days[i]; return `<th>${DIAS[d.wd].slice(0, 1)}<br>${d.dia}${d.feriado ? '*' : ''}</th>`; }).join('');
+  const head = idx.map(i => { const d = span.days[i]; return `<th class="${d.wd === DOM ? 'dom' : ''}">${DIAS[d.wd].slice(0, 1)}<br>${d.dia}${d.feriado ? '*' : ''}</th>`; }).join('');
+  const varia = [];
   const rows = S.emps.map((e, ei) => {
-    const hd = descreverHorario(sel.tpl[ei], diasTrabalhados(span, sel.works[ei]));
-    return `<tr><td class="l">${esc(e.nome)}</td><td class="l">${esc(e.cargo)}</td><td class="l">${esc(hd)}</td>${idx.map(i => {
-      const d = span.days[i]; return `<td>${fechadoGer(S, d) ? (d.feriado ? 'FR' : '—') : sel.works[ei][i] ? 'T' : 'F'}</td>`; }).join('')}</tr>`;
+    const wds = diasTrabalhados(span, sel.works[ei]), hp = horarioPrincipal(sel.tpl[ei], wds);
+    if (hp.endsWith('(varia)')) varia.push(`<b>${esc(e.nome)}:</b> ${esc(descreverHorario(sel.tpl[ei], wds))}`);
+    return `<tr><td class="l">${esc(e.nome)}</td><td class="l">${esc(e.cargo)}</td><td class="l">${esc(hp)}</td>${idx.map(i => {
+      const d = span.days[i], dom = d.wd === DOM ? 'dom' : '';
+      if (fechadoGer(S, d)) return `<td class="${d.feriado ? 'fr' : dom}">${d.feriado ? 'FR' : '—'}</td>`;
+      return sel.works[ei][i] ? `<td class="${dom}">T</td>` : `<td class="f ${dom}">F</td>`;
+    }).join('')}</tr>`;
   }).join('');
   const fer = idx.filter(i => span.days[i].feriado).map(i => `${span.days[i].dia} – ${span.days[i].feriado}`).join('; ');
-  return `<div class="doc">${LOGO_DOC}
-    <h1>ESCALA DE REVEZAMENTO — ${esc(nomeMes(span).toUpperCase())}</h1>
-    <p class="meta"><b>Empregador:</b> ${esc(S.razao || '________________')} &nbsp; <b>CNPJ:</b> ${esc(S.cnpj || '________________')} &nbsp; <b>Local:</b> ${esc(S.cidade)}${S.uf ? '/' + S.uf : ''}</p>
-    <p class="meta"><b>Funcionamento:</b> ${esc(funcTexto())}</p>
-    <p class="meta"><b>Regime:</b> ${esc(span.rFim.nome)} — EC 141/2026, Decreto 13.173/2026 e Portaria MTE 2.041/2026. <b>Atividade:</b> ${S.setor === 'comercio' ? 'comércio' : 'demais atividades'}.</p>
-    <table><thead><tr><th class="l">Colaborador(a)</th><th class="l">Cargo</th><th class="l">Horário</th>${head}</tr></thead><tbody>${rows}</tbody></table>
-    <p class="meta">Legenda: T = trabalho · F = repouso semanal · FR = feriado · — = estabelecimento fechado. ${fer ? '* Feriados: ' + esc(fer) + '.' : ''}</p>
-    <table class="ass"><thead><tr><th class="l" style="width:35%">Colaborador(a)</th><th style="width:40%">Assinatura (ciência da escala)</th><th>Data</th></tr></thead>
+  const nDias = idx.length;
+  return `<div class="doc escala">${cabecalhoDoc()}
+    <h1>Escala de revezamento — ${esc(nomeMes(span))}</h1>
+    <div class="meta">
+      <b>Regime</b><span>${esc(span.rFim.nome)} — EC 141/2026, Decreto 13.173/2026 e Portaria MTE 2.041/2026</span>
+      <b>Atividade</b><span>${S.setor === 'comercio' ? 'Comércio' : 'Demais atividades'}</span>
+      <b>Funcionamento</b><span>${esc(funcTexto())}</span>
+    </div>
+    <table>
+      <colgroup><col style="width:30mm"><col style="width:22mm"><col style="width:40mm">${'<col>'.repeat(nDias)}</colgroup>
+      <thead><tr><th class="l">Colaborador(a)</th><th class="l">Cargo</th><th class="l">Horário</th>${head}</tr></thead><tbody>${rows}</tbody>
+    </table>
+    <p class="nota"><b>Legenda:</b> T = trabalho · F = repouso semanal remunerado · FR = feriado · — = estabelecimento fechado.${fer ? ' <b>* Feriados:</b> ' + esc(fer) + '.' : ''}</p>
+    ${varia.length ? `<h2>Horários que variam conforme o dia</h2>${varia.map(v => `<p class="nota">${v}</p>`).join('')}` : ''}
+    ${rodapeDoc('Página 1 de 2 · afixar em local visível')}
+    <div class="pg2">${cabecalhoDoc()}
+    <h1>Ciência da escala de revezamento — ${esc(nomeMes(span))}</h1>
+    <p class="nota">Declaro ter recebido e tomado ciência da escala de revezamento deste mês, com meus dias de trabalho, repouso e horário.</p>
+    <table class="ass"><colgroup><col style="width:38%"><col style="width:42%"><col></colgroup>
+      <thead><tr><th class="l">Colaborador(a)</th><th>Assinatura</th><th>Data</th></tr></thead>
       <tbody>${S.emps.map(e => `<tr><td class="l">${esc(e.nome)}</td><td></td><td></td></tr>`).join('')}</tbody></table>
-    <p class="meta">Escala afixada em ___/___/______. Responsável: ______________________________</p>
+    ${rodapeDoc('Página 2 de 2 · afixada em ____/____/________ · Responsável: ______________________')}
+    </div>
   </div>`;
 }
 function docTermos(){
   const { span } = RES, sel = selecionada(), ini = inicioVigencia(span);
   return S.emps.map((e, ei) => {
-    const sg = sel.segs[ei].find(x => x.length) || [], hd = descreverHorario(sel.tpl[ei], diasTrabalhados(span, sel.works[ei])), carga = fmtH(soma(span.days.map((d, i) => d.inMonth ? segMin(sel.segs[ei][i]) : 0)) / 60 / (span.diasMes / 7)), r = remuneracao(S, span, e), N = nDomingo(S, e);
+    const wds = diasTrabalhados(span, sel.works[ei]);
+    const sg = sel.segs[ei].find(x => x.length) || [], hd = descreverHorario(sel.tpl[ei], wds),
+      carga = fmtH(Math.max(...[...Array(span.weeks).keys()].map(w => soma(sel.segs[ei].slice(w * 7, w * 7 + 7).map(segMin))))  / 60),
+      r = remuneracao(S, span, e), N = nDomingo(S, e);
     const remTxt = !r ? 'Fica mantida a remuneração mensal atualmente contratada, sem qualquer redução.'
       : r.tipo === 'mensal' ? `Fica mantido o salário mensal de ${brl(r.sal)}, sem qualquer redução nominal ou proporcional.`
       : `Para preservar a remuneração mensal, o valor-hora passa de ${brl(r.horaAtual)} para ${brl(r.horaMin)}.`;
-    const compTxt = S.comp === 'individual' && segMin(sg) > 480 ? `<p><b>4. Compensação.</b> As horas que ultrapassarem 8 diárias, até o limite de 10, serão compensadas dentro do mesmo mês, nos termos do art. 59, §6º, da CLT.</p>` : '';
-    return `<div class="doc termo">${LOGO_DOC}
-      <h1>TERMO ADITIVO AO CONTRATO DE TRABALHO — JORNADA E ESCALA</h1>
-      <p><b>Empregador:</b> ${esc(S.razao || '______________________________')}, CNPJ ${esc(S.cnpj || '__________________')}.<br>
-      <b>Empregado(a):</b> ${esc(e.nome)}, cargo ${esc(e.cargo || '__________________')}.</p>
-      <p>Em razão da Emenda Constitucional nº 141/2026, do Decreto nº 13.173/2026 e da Portaria MTE nº 2.041/2026, as partes ajustam, a partir de ${fmtData(ini)}, o seguinte:</p>
-      <p><b>1. Jornada.</b> ${carga} semanais, em média, em 5 dias de trabalho por semana, no horário de ${esc(hd)}.</p>
-      <p><b>2. Repouso.</b> Dois dias de descanso por semana, de 24 horas consecutivas cada, conforme a escala mensal de revezamento afixada no estabelecimento${S.aberto[DOM] ? `, com folga aos domingos ao menos uma vez a cada ${N} semanas` : ''}.</p>
-      <p><b>3. Remuneração.</b> ${remTxt}</p>
-      ${compTxt}
-      <p><b>${compTxt ? 5 : 4}. Ciência.</b> O(a) empregado(a) declara ter sido comunicado(a) da alteração com antecedência e ter recebido cópia da escala do mês. As demais cláusulas do contrato continuam em vigor.</p>
-      <p>${esc(S.cidade || '__________')}, ____ de ______________ de ${ini.getFullYear()}.</p>
-      <div class="sign"><div>Empregador</div><div>Empregado(a)</div></div>
+    const comp = S.comp === 'individual' && sel.segs[ei].some(x => segMin(x) > 480);
+    let n = 0; const c = t => `<p><b>Cláusula ${++n}ª — ${t}</b> `;
+    return `<div class="doc termo">${cabecalhoDoc()}
+      <h1>TERMO ADITIVO AO CONTRATO DE TRABALHO<br><span style="font-weight:400;font-size:11pt">Alteração de jornada e escala de trabalho</span></h1>
+      <div class="partes">
+        <p><b>EMPREGADOR:</b> ${esc(S.razao || '__________________________________________')}, inscrito no CNPJ sob o nº ${esc(S.cnpj || '______________________')}, com sede em ${esc(S.cidade || '____________')}${S.uf ? '/' + esc(S.uf) : ''}.</p>
+        <p><b>EMPREGADO(A):</b> ${esc(e.nome)}, ocupante do cargo de ${esc(e.cargo || '______________________')}, CPF nº ______________________.</p>
+      </div>
+      <p>As partes acima identificadas, em razão da Emenda Constitucional nº 141/2026, do Decreto nº 13.173/2026 e da Portaria MTE nº 2.041/2026, ajustam o presente termo aditivo ao contrato de trabalho, que passa a vigorar a partir de ${fmtData(ini)}, nas condições a seguir.</p>
+      ${c('Jornada.')}A jornada passa a ser de até ${carga} semanais, distribuídas em 5 dias de trabalho por semana, no seguinte horário: ${esc(hd)}.</p>
+      ${c('Repouso.')}O(a) empregado(a) terá dois dias de repouso por semana, de 24 horas consecutivas cada, conforme a escala mensal de revezamento afixada no estabelecimento${S.aberto[DOM] ? `, com folga aos domingos ao menos uma vez a cada ${N} semanas` : ''}.</p>
+      ${c('Remuneração.')}${remTxt}</p>
+      ${comp ? `${c('Compensação.')}As horas que ultrapassarem 8 diárias, até o limite de 10, serão compensadas dentro do mesmo mês, nos termos do art. 59, §6º, da CLT.</p>` : ''}
+      ${c('Ciência.')}O(a) empregado(a) declara ter sido comunicado(a) da alteração com antecedência e ter recebido cópia da escala do mês.</p>
+      ${c('Disposições gerais.')}Permanecem em vigor as demais cláusulas do contrato de trabalho que não conflitem com este termo.</p>
+      <p class="local">${esc(S.cidade || '____________')}${S.uf ? '/' + esc(S.uf) : ''}, ______ de ____________________ de ${ini.getFullYear()}.</p>
+      <div class="sign">
+        <div>${esc(S.razao || 'Empregador')}<br><small>Empregador</small></div>
+        <div>${esc(e.nome)}<br><small>Empregado(a)</small></div>
+      </div>
+      <div class="sign test">
+        <div>Testemunha 1<br><small>Nome e CPF</small></div>
+        <div>Testemunha 2<br><small>Nome e CPF</small></div>
+      </div>
+      ${rodapeDoc('Página do(a) colaborador(a): ' + esc(e.nome))}
     </div>`;
   }).join('');
 }
-function imprimir(html){
+function imprimir(html, orient){
+  let st = document.getElementById('pageStyle');
+  if (!st) { st = document.createElement('style'); st.id = 'pageStyle'; document.head.appendChild(st); }
+  st.textContent = `@page{size:A4 ${orient};margin:0}`;
   $('#printArea').innerHTML = html;
   try { window.print(); } catch (e) { aviso('A impressão não está disponível neste navegador.'); }
 }
