@@ -58,6 +58,7 @@
   .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .days-cfg td{padding:4px}
   .days-cfg input[type=number]{width:56px;padding:6px 4px;text-align:center}
+  .days-cfg input[type=time]{width:92px;padding:6px 4px;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:8px}
   .btn{border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--pri-soft);color:var(--pri)}
   .btn.pri{background:var(--pri);color:#fff}
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
@@ -187,7 +188,7 @@
     <div class="scroll" style="margin-top:8px">
       <table class="days-cfg">
         <thead><tr><th class="l">Dia</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th></tr></thead>
-        <tbody><tr></tr><tr></tr></tbody>
+        <tbody><tr></tr><tr></tr><tr></tr><tr></tr></tbody>
       </table>
     </div>
   </section>
@@ -261,7 +262,7 @@ function regra(d){
 
 /* ---------- Horários ---------- */
 function toMin(t){
-  const m = /^(\d{1,2})(?:[:h]?(\d{2}))?$/.exec(t.trim());
+  const m = /^(\d{1,2})(?:[:h]?(\d{2}))?$/.exec(t.trim().replace(/h$/i, ''));
   if (!m) return NaN;
   const h = +m[1], mi = +(m[2] || 0);
   return (h > 24 || mi > 59) ? NaN : h * 60 + mi;
@@ -389,11 +390,115 @@ function trabalhaFeriado(s){ return s.abreFeriado && (s.setor !== 'comercio' || 
 function fechadoGer(s, d){ return !s.aberto[d.wd] || (d.feriado && !trabalhaFeriado(s)); }
 function fechadoAtual(s, d){ return !s.aberto[d.wd] || (d.feriado && !s.abreFeriado); }
 
+/* ---------- Horário de funcionamento ---------- */
+function janela(s, wd){
+  const f = (s.func || [])[wd];
+  if (!f || !f[0] || !f[1]) return null;
+  const a = toMin(f[0]), b = toMin(f[1]);
+  if (isNaN(a) || isNaN(b)) return null;
+  return [a, b <= a ? b + 1440 : b];
+}
+const cobre = (sg, t) => sg.some(([a, b]) => a <= t + 15 && b > t + 15);
+function presencaMin(s, span, works, segs, i){
+  const d = span.days[i], j = janela(s, d.wd);
+  if (!j || fechadoGer(s, d)) return null;
+  let mn = Infinity;
+  for (let t = j[0]; t < j[1]; t += 30) {
+    let c = 0;
+    works.forEach((w, k) => { if (w[i] && cobre(segs[k][i], t)) c++; });
+    mn = Math.min(mn, c);
+  }
+  return mn === Infinity ? null : mn;
+}
+function opcoesTurno(s, e, wd, H){
+  const j = janela(s, wd), mo = modelo(e);
+  if (!j) {
+    let sg = montarSegs(mo.ent, mo.int, H);
+    if (e.menor) { const fim = sg[sg.length - 1][1]; if (fim > 1320 || sg[0][0] < 300) sg = montarSegs(Math.max(300, Math.min(mo.ent, 1320 - (fim - sg[0][0]))), mo.int, H); }
+    return [sg];
+  }
+  const len = j[1] - j[0];
+  let h = H, need = h > 360 ? 60 : h > 240 ? 15 : 0;
+  if (h + need > len) {
+    h = len - 60; need = 60;
+    if (h <= 360) { h = Math.min(H, len - 15); need = 15; if (h <= 240) { h = Math.min(H, len); need = 0; } }
+  }
+  let iv = need === 60 ? Math.min(120, Math.max(60, mo.int)) : need;
+  if (h + iv > len) iv = need;
+  const dur = h + iv, starts = [], outs = [];
+  for (let st = j[0]; st + dur <= j[1]; st += 30) starts.push(st);
+  if (!starts.includes(j[1] - dur) && j[1] - dur >= j[0]) starts.push(j[1] - dur);
+  for (const st of starts) {
+    if (!need) { outs.push([[st, st + h]]); continue; }
+    const meio = Math.round(h / 2 / 30) * 30;
+    const firsts = need === 60 ? [meio - 60, meio - 30, meio, meio + 30, meio + 60].filter(f => f >= 120 && h - f >= 120) : [meio];
+    for (const f of (firsts.length ? firsts : [meio])) outs.push([[st, st + f], [st + f + iv, st + h + iv]]);
+  }
+  const ok = outs.filter(sg => !e.menor || (sg[0][0] >= 300 && sg[sg.length - 1][1] <= 1320));
+  return ok.length ? ok : (outs.length ? outs : [[[j[0], j[0] + Math.min(h, len)]]]);
+}
+function horariosNovos(s, span, works, hFn){
+  const covW = [0,1,2,3,4,5,6].map(wd => { const j = janela(s, wd); return j ? Array(Math.ceil((j[1] - j[0]) / 30)).fill(0) : null; });
+  const wgt = works.map(w => {
+    const c = Array(7).fill(0), t = Array(7).fill(0);
+    span.days.forEach((d, i) => { if (!fechadoGer(s, d)) { t[d.wd]++; if (w[i]) c[d.wd]++; } });
+    return c.map((x, k) => t[k] ? x / t[k] : 0);
+  });
+  return s.emps.map((e, k) => {
+    const H = Math.round(hFn(e) * 60), mo = modelo(e), tpl = Array(7).fill(null);
+    const nC = [0,1,2,3,4,5,6].map(wd => opcoesTurno(s, e, wd, H).length);
+    const ordem = [0,1,2,3,4,5,6].sort((a, b) => (wgt[k][b] > 0) - (wgt[k][a] > 0) || nC[a] - nC[b] || wgt[k][b] - wgt[k][a]);
+    for (const wd of ordem) {
+      const j = janela(s, wd);
+      let cands = opcoesTurno(s, e, wd, H);
+      const f = cands.filter(sg => tpl.every(x => !x || (sg[0][0] + 1440 - x[x.length - 1][1] >= 660 && x[0][0] + 1440 - sg[sg.length - 1][1] >= 660)));
+      if (f.length) cands = f;
+      let best = cands[0], bs = -Infinity;
+      for (const sg of cands) {
+        let sc = -Math.abs(sg[0][0] - mo.ent) / 30 * 0.001 + segMin(sg) * 0.0001;
+        if (j && wgt[k][wd]) covW[wd].forEach((c, n) => { if (cobre(sg, j[0] + n * 30)) { const falta = (s.minimo[wd] || 0) - c; sc += falta > 0 ? falta : 0.05 / (1 + c); } });
+        if (sc > bs) { bs = sc; best = sg; }
+      }
+      tpl[wd] = best;
+      if (j && wgt[k][wd]) covW[wd].forEach((c, n) => { if (cobre(best, j[0] + n * 30)) covW[wd][n] += wgt[k][wd]; });
+    }
+    // reparo da interjornada entre dias seguidos (ex.: fecha às 21h e abre às 7h no dia seguinte)
+    const ok11 = (a, b) => !a || !b || b[0][0] + 1440 - a[a.length - 1][1] >= 660;
+    for (let pass = 0; pass < 3; pass++) for (let wd = 0; wd < 7; wd++) {
+      const nx = (wd + 1) % 7;
+      if (ok11(tpl[wd], tpl[nx])) continue;
+      const pv = tpl[(wd + 6) % 7];
+      const alt = opcoesTurno(s, e, wd, H).filter(sg => ok11(pv, sg) && ok11(sg, tpl[nx]))
+        .sort((a, b) => b[0][0] - a[0][0] === 0 ? segMin(b) - segMin(a) : a[a.length - 1][1] - b[b.length - 1][1]);
+      if (alt.length) tpl[wd] = alt[0];
+      else { const alt2 = opcoesTurno(s, e, nx, H).filter(sg => ok11(tpl[wd], sg) && ok11(sg, tpl[(nx + 1) % 7])); if (alt2.length) tpl[nx] = alt2[alt2.length - 1]; }
+    }
+    return tpl;
+  });
+}
+function segsDeTpl(span, works, tpl){ return works.map((w, k) => span.days.map((d, i) => w[i] ? tpl[k][d.wd] : [])); }
+function descreverHorario(tpl, wds){
+  const grupos = [];
+  wds.forEach(wd => { const t = fmtSegs(tpl[wd] || []), g = grupos.find(x => x.t === t); if (g) g.d.push(wd); else grupos.push({ t, d: [wd] }); });
+  if (grupos.length === 1) return grupos[0].t;
+  const nome = d => DIAS[d].toLowerCase();
+  return grupos.map(g => {
+    const seq = g.d.length > 2 && g.d.every((x, i) => !i || x === g.d[i - 1] + 1);
+    return (seq ? nome(g.d[0]) + ' a ' + nome(g.d[g.d.length - 1]) : g.d.map(nome).join(', ')) + ': ' + g.t;
+  }).join('; ');
+}
+function horarioPrincipal(tpl, wds){
+  const c = {}; wds.forEach(wd => { const t = fmtSegs(tpl[wd] || []); c[t] = (c[t] || 0) + 1; });
+  const k = Object.keys(c).sort((a, b) => c[b] - c[a]);
+  return k.length ? k[0] + (k.length > 1 ? ' (varia)' : '') : 'folga';
+}
+function diasTrabalhados(span, w){ return [...new Set(span.days.filter((d, i) => w[i]).map(d => d.wd))].sort((a, b) => a - b); }
+
 /* ---------- Validação de um colaborador ---------- */
 function validar(s, span, e, work, segs, orig){
   const out = [], err = m => out.push({ t: 'err', m }), warn = m => out.push({ t: 'warn', m });
   const cap = capDia(s, e), N = nDomingo(s, e);
-  let maxDia = 0, noturno = 0, intra1 = [], intra15 = [], intraLong = [], ferTrab = [], folgaTrab = [];
+  let maxDia = 0, noturno = 0, intra1 = [], intra15 = [], intraLong = [], ferTrab = [], folgaTrab = [], fora = [];
   span.days.forEach((d, i) => {
     if (!work[i]) return;
     const sg = segs[i], tot = segMin(sg), g = maxGap(sg);
@@ -403,7 +508,10 @@ function validar(s, span, e, work, segs, orig){
     if (d.inMonth) noturno += minNoturnos(sg);
     if (d.feriado && d.inMonth) ferTrab.push(`${d.dia} (${d.feriado})`);
     if (orig && !orig[i] && d.inMonth) folgaTrab.push(d.dia);
+    const j = janela(s, d.wd);
+    if (j && d.inMonth && (sg[0][0] < j[0] || sg[sg.length - 1][1] > j[1])) fora.push(d.dia);
   });
+  if (fora.length) warn(`Trabalha fora do horário de funcionamento no(s) dia(s) ${lst(fora)}. Confira se é abertura ou fechamento de caixa e se o ponto registra.`);
   if (maxDia > cap * 60 + EPS) {
     const why = s.comp === 'nenhuma' ? 'sem acordo de compensação' : (e.menor || e.insal) ? `${e.menor ? 'menor de 18 anos' : 'atividade insalubre'} só compensa com norma coletiva` : '8h + 2h de compensação';
     err(`Jornada de ${fmtH(maxDia / 60)} num dia, acima do teto de ${cap}h (${why}).`);
@@ -481,11 +589,12 @@ function validar(s, span, e, work, segs, orig){
 function avaliar(s, span, works, segs, origs){
   const evals = s.emps.map((e, i) => validar(s, span, e, works[i], segs[i], origs && origs[i]));
   const cov = span.days.map((d, i) => works.reduce((a, w) => a + (w[i] ? 1 : 0), 0));
+  const sim = span.days.map((d, i) => presencaMin(s, span, works, segs, i));
   let deficit = 0;
-  span.days.forEach((d, i) => { if (d.inMonth && !fechadoGer(s, d) && cov[i] < (s.minimo[d.wd] || 0)) deficit++; });
+  span.days.forEach((d, i) => { if (d.inMonth && !fechadoGer(s, d) && (sim[i] ?? cov[i]) < (s.minimo[d.wd] || 0)) deficit++; });
   const cnt = t => evals.reduce((a, v) => a + v.issues.filter(x => x.t === t).length, 0);
   const domF = evals.reduce((a, v) => a + v.domFolga, 0), domT = evals.reduce((a, v) => a + v.domMes, 0);
-  return { works, segs, evals, cov, deficit, erros: cnt('err'), avisos: cnt('warn'), domPct: domT ? domF / domT : 0 };
+  return { works, segs, evals, cov, sim, deficit, erros: cnt('err'), avisos: cnt('warn'), domPct: domT ? domF / domT : 0 };
 }
 
 /* ---------- Escala atual repetida no mês ---------- */
@@ -651,8 +760,9 @@ function gerarOpcoes(s, span){
     if (!works) return null;
     aplicarFechamentos(s, span, works);
     if (!s.redist) repararSemanas(s, span, works); else garantirMinimoMensal(s, span, works);
-    const segs = s.emps.map((e, i) => segsNovos(s, span, e, works[i], o.h ? o.h(s, span, e) : undefined));
-    return Object.assign({ id: o.id, nome: o.nome, desc: o.desc, base: works.map(w => w.slice()) }, avaliar(s, span, works, segs));
+    const hFn = e => o.h ? o.h(s, span, e) : horaDia(s, span, e);
+    const tpl = horariosNovos(s, span, works, hFn);
+    return Object.assign({ id: o.id, nome: o.nome, desc: o.desc, base: works.map(w => w.slice()), tpl }, avaliar(s, span, works, segsDeTpl(span, works, tpl)));
   }).filter(Boolean).sort((a, b) => a.erros - b.erros || a.deficit - b.deficit || b.domPct - a.domPct);
 }
 
@@ -717,12 +827,18 @@ function importarEmpresa(rows){
     else if (k === 'cnpj') out.cnpj = v;
     else if (k === 'cidade') out.cidade = v;
     else if (k === 'uf') out.uf = v.toUpperCase();
+    else if (/^(funcionamento )?(seg|ter|qua|qui|sex|sab|dom)/.test(k)) {
+      const wd = ['seg','ter','qua','qui','sex','sab','dom'].findIndex(x => k.replace(/^funcionamento /, '').startsWith(x));
+      out.func = out.func || {};
+      const m = /(\d{1,2}[:h]?\d{0,2})\s*[-–a]\s*(\d{1,2}[:h]?\d{0,2})/.exec(v);
+      out.func[wd] = /fechad/i.test(semAcento(v)) ? null : m ? [fmtHM(toMin(m[1])), fmtHM(toMin(m[2]))] : undefined;
+    }
     else if (k.startsWith('atividade')) out.setor = semAcento(v).startsWith('comerc') ? 'comercio' : 'outros';
   });
   return out;
 }
 
-if (typeof module !== 'undefined') module.exports = { importarColaboradores, importarEmpresa, diasFerias, CIDADES, buildSpan, validar, avaliar, escalaAtual, gerarOpcoes, segsNovos, parseHorario, remuneracao, horaDia, cargaNova, cargaAtual, regra };
+if (typeof module !== 'undefined') module.exports = { horarioPrincipal, horariosNovos, descreverHorario, janela, presencaMin, importarColaboradores, importarEmpresa, diasFerias, CIDADES, buildSpan, validar, avaliar, escalaAtual, gerarOpcoes, segsNovos, parseHorario, remuneracao, horaDia, cargaNova, cargaAtual, regra };
 </script>
 
 <!-- ===================== INTERFACE ===================== -->
@@ -737,6 +853,7 @@ function exemplo(){
     razao: '', cnpj: '', cidade: 'Paripiranga', uf: 'BA', ferLocais: '29/06, 30/11, 08/12',
     setor: 'comercio', mes: '2027-01', semIni: '0', comp: 'nenhuma', redist: false, abreFeriado: false, ferAut: false,
     aberto: [true, true, true, true, true, true, true], minimo: [3, 3, 3, 3, 3, 4, 2],
+    func: [['08:00', '18:00'], ['08:00', '18:00'], ['08:00', '18:00'], ['08:00', '18:00'], ['08:00', '18:00'], ['08:00', '14:00'], ['08:00', '12:00']],
     emps: [
       { nome: 'Ana', cargo: 'Vendedora', mulher: true, menor: false, insal: false, parcial: false, tipoRem: 'mensal', sal: 1850, hor: [H8, H8, H8, H8, H8, H4, ''] },
       { nome: 'Bruno', cargo: 'Vendedor', mulher: false, menor: false, insal: false, parcial: false, tipoRem: 'mensal', sal: 1850, hor: [H8, H8, '', H8, H8, H8, H4] },
@@ -753,6 +870,7 @@ function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch (e)
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
 let S = Object.assign(exemplo(), load() || {});
+if (!Array.isArray(S.func) || S.func.length !== 7) S.func = exemplo().func;
 let RES = null, SEL = null, CUR = null;
 const CAMPOS = ['razao', 'cnpj', 'cidade', 'uf', 'ferLocais', 'setor', 'mes', 'semIni', 'comp'];
 const cidadeIdx = () => CIDADES.findIndex(c => c[0] === S.cidade && c[1] === S.uf);
@@ -787,7 +905,9 @@ function renderParams(){
   CHECKS.forEach(k => { $('#' + k).checked = !!S[k]; });
   const rows = document.querySelectorAll('.days-cfg tbody tr');
   rows[0].innerHTML = '<td class="l">Empresa abre?</td>' + DIAS.map((_, d) => `<td><input type="checkbox" data-ab="${d}" ${S.aberto[d] ? 'checked' : ''}></td>`).join('');
-  rows[1].innerHTML = '<td class="l">Mínimo de pessoas</td>' + DIAS.map((_, d) => `<td><input type="number" min="0" data-mn="${d}" value="${S.minimo[d]}"></td>`).join('');
+  rows[1].innerHTML = '<td class="l">Abre às</td>' + DIAS.map((_, d) => `<td><input type="time" data-fa="${d}" value="${esc((S.func[d] || [])[0] || '')}" ${S.aberto[d] ? '' : 'disabled'}></td>`).join('');
+  rows[2].innerHTML = '<td class="l">Fecha às</td>' + DIAS.map((_, d) => `<td><input type="time" data-ff="${d}" value="${esc((S.func[d] || [])[1] || '')}" ${S.aberto[d] ? '' : 'disabled'}></td>`).join('');
+  rows[3].innerHTML = '<td class="l">Mínimo de pessoas<br><span class="muted small">ao mesmo tempo</span></td>' + DIAS.map((_, d) => `<td><input type="number" min="0" data-mn="${d}" value="${S.minimo[d]}"></td>`).join('');
   syncDeps();
 }
 function totalEmp(e){ const bad = e.hor.some(h => parseHorario(h).erro); return bad ? '<b style="color:var(--err)">Horário inválido</b>' : `Total: <b>${fmtH(cargaAtual(e))}</b> por semana`; }
@@ -821,7 +941,8 @@ document.addEventListener('input', ev => {
   }
   else if (CAMPOS.includes(t.id)) { S[t.id] = t.value; if (t.id === 'uf') renderCidade(); syncDeps(); }
   else if (CHECKS.includes(t.id)) { S[t.id] = t.checked; syncDeps(); }
-  else if (t.dataset.ab) S.aberto[+t.dataset.ab] = t.checked;
+  else if (t.dataset.ab) { S.aberto[+t.dataset.ab] = t.checked; renderParams(); }
+  else if (t.dataset.fa || t.dataset.ff) { const d = +(t.dataset.fa || t.dataset.ff); S.func[d] = S.func[d] || ['', '']; S.func[d][t.dataset.fa ? 0 : 1] = t.value; }
   else if (t.dataset.mn) S.minimo[+t.dataset.mn] = Math.max(0, +t.value || 0);
   else {
     const box = t.closest('.emp'); if (!box) return;
@@ -876,7 +997,9 @@ $('#arquivo').onchange = async ev => {
     const abaEmp = wb.SheetNames.find(n => semAcento(n).startsWith('empresa'));
     const emp = abaEmp ? importarEmpresa(X.utils.sheet_to_json(wb.Sheets[abaEmp], { header: 1, raw: false, defval: '' })) : {};
     const anterior = JSON.stringify(S);
+    const fx = emp.func; delete emp.func;
     Object.assign(S, emp); S.emps = r.emps;
+    if (fx) Object.entries(fx).forEach(([d, v]) => { if (v === null) S.aberto[+d] = false; else if (v) { S.aberto[+d] = true; S.func[+d] = v; } });
     if (emp.cidade) { const c = CIDADES.find(x => semAcento(x[0]) === semAcento(emp.cidade) && (!emp.uf || x[1] === emp.uf)); if (c) { S.cidade = c[0]; S.uf = c[1]; S.ferLocais = c[2]; } }
     renderParams(); renderEmps(); save(); $('#saida').innerHTML = ''; RES = null;
     msgImport(`${r.emps.length} colaborador(es) importado(s) de "${esc(f.name)}".${r.avisos.length ? '<br>' + r.avisos.map(esc).join('<br>') : ''} <button class="btn ghost sm" id="desfazImp">Desfazer importação</button>`, r.avisos.length ? 'note' : 'info');
@@ -911,9 +1034,7 @@ function editar(ei, i){
   const sel = selecionada(), span = RES.span;
   const works = sel.works.map(w => w.slice());
   works[ei][i] = !works[ei][i];
-  const e = S.emps[ei], o = OPCOES.find(x => x.id === sel.id);
-  const segs = S.emps.map((emp, k) => segsNovos(S, span, emp, works[k], o.h ? o.h(S, span, emp) : undefined));
-  CUR = avaliar(S, span, works, segs, sel.base);
+  CUR = Object.assign(avaliar(S, span, works, segsDeTpl(span, works, sel.tpl), sel.base), { tpl: sel.tpl });
   renderSaida();
 }
 
@@ -934,7 +1055,7 @@ function renderSaida(){
   <section class="card">
     <h2>3. Diagnóstico da escala atual <small>— repetida em ${esc(nomeMes(span))}</small></h2>
     ${trans}
-    <p>${pillStatus(atual)} ${atual.deficit ? `<span class="pill warn">${atual.deficit} dia(s) abaixo do mínimo de pessoas</span>` : ''}</p>
+    <p>${pillStatus(atual)} ${atual.deficit ? `<span class="pill warn">${atual.deficit} dia(s) com menos gente que o mínimo em algum momento do expediente</span>` : ''}</p>
     <div class="scroll"><table>
       <thead><tr><th class="l">Colaborador(a)</th><th>Hoje</th><th>Nova carga</th><th class="l">O que precisa mudar</th></tr></thead>
       <tbody>${S.emps.map((e, i) => `<tr><td class="l"><b>${esc(e.nome)}</b><br><span class="muted small">${esc(e.cargo)}</span></td>
@@ -961,15 +1082,20 @@ function renderSaida(){
       const o = d.inMonth ? '' : 'out', mod = w[j] !== sel.base[ei][j] ? 'mod' : '';
       if (fechadoGer(S, d)) return `<td class="${d.feriado ? 'h' : 'c'} ${o}">${d.feriado ? 'FR' : '—'}</td>`;
       if (!w[j]) return `<td class="f ed ${o} ${mod}" data-e="${ei}" data-i="${j}">F</td>`;
-      return `<td class="t ed ${d.wd === DOM ? 'sun' : ''} ${d.feriado ? 'h' : ''} ${o} ${mod}" data-e="${ei}" data-i="${j}">${fmtH(segMin(sel.segs[ei][j]) / 60)}</td>`;
+      return `<td class="t ed ${d.wd === DOM ? 'sun' : ''} ${d.feriado ? 'h' : ''} ${o} ${mod}" data-e="${ei}" data-i="${j}" title="${fmtSegs(sel.segs[ei][j])}">${fmtH(segMin(sel.segs[ei][j]) / 60)}</td>`;
     }).join('');
-    const sg = sel.segs[ei].find(x => x.length) || [];
-    return `<tr><td class="l"><button class="nomebtn" data-ferias="${ei}" title="Ver dias para início de férias">${esc(e.nome)}</button><br><span class="muted small">${fmtSegs(sg)}</span></td>${cells}
+    const hd = sel.tpl ? horarioPrincipal(sel.tpl[ei], diasTrabalhados(span, w)) : fmtSegs(sel.segs[ei].find(x => x.length) || []);
+    return `<tr><td class="l"><button class="nomebtn" data-ferias="${ei}" title="Ver horário e dias para início de férias">${esc(e.nome)}</button><br><span class="muted small">${esc(hd)}</span></td>${cells}
       <td class="small">${v.folgasMes}</td><td class="small">${v.domFolga}/${v.domMes}</td><td class="small">${fmtH(v.media)}</td></tr>`;
   }).join('');
   const covRow = span.days.map((d, j) => {
     if (fechadoGer(S, d)) return `<td class="c ${d.inMonth ? '' : 'out'}">—</td>`;
     return `<td class="${sel.cov[j] < (S.minimo[d.wd] || 0) ? 'low' : ''} ${d.inMonth ? '' : 'out'}">${sel.cov[j]}</td>`;
+  }).join('');
+  const simRow = span.days.map((d, j) => {
+    const v = sel.sim[j];
+    if (v === null) return `<td class="c ${d.inMonth ? '' : 'out'}">—</td>`;
+    return `<td class="${v < (S.minimo[d.wd] || 0) ? 'low' : ''} ${d.inMonth ? '' : 'out'}">${v}</td>`;
   }).join('');
   const probs = S.emps.map((e, i) => sel.evals[i].issues.length ? `<p style="margin:8px 0 0"><b>${esc(e.nome)}</b></p>${issuesHtml(sel.evals[i].issues)}` : '').join('');
 
@@ -977,15 +1103,16 @@ function renderSaida(){
   <section class="card">
     <h2>4. Opções de nova escala <small>— ${esc(nomeMes(span))}</small></h2>
     <div class="opts">${cards}</div>
-    <p class="muted small">Toque no <b>nome</b> para ver os dias em que a pessoa pode começar as férias. Toque num dia para trocar trabalho ↔ folga. A ferramenta revalida na hora e marca o que foi alterado.</p>
+    <p class="muted small">Os turnos são distribuídos para cobrir o horário de funcionamento, escalonando entradas e almoços. "Mínimo ao mesmo tempo" é o menor número de pessoas presentes em qualquer momento do expediente. Toque no <b>nome</b> para ver o horário de cada dia e os dias em que a pessoa pode começar as férias. Toque num dia para trocar trabalho ↔ folga. A ferramenta revalida na hora e marca o que foi alterado.</p>
     <div class="legend"><span style="--c:var(--ok-soft)">F = folga</span><span style="--c:var(--hol)">FR / roxo = feriado</span><span style="--c:var(--sun)">Domingo trabalhado</span><span style="--c:var(--off)">Fechado</span><span style="--c:var(--err-soft)">Abaixo do mínimo</span></div>
     <div class="scroll"><table class="cal">
       <thead><tr><th class="l">Colaborador(a)</th>${head}<th>Folgas no mês</th><th>Domingos de folga</th><th>Média/sem</th></tr></thead>
-      <tbody>${rows}<tr class="cov"><td class="l">Pessoas no dia</td>${covRow}<td colspan="3"></td></tr></tbody>
+      <tbody>${rows}<tr class="cov"><td class="l">Pessoas no dia</td>${covRow}<td colspan="3"></td></tr>
+      <tr class="cov"><td class="l">Mínimo ao mesmo tempo</td>${simRow}<td colspan="3"></td></tr></tbody>
     </table></div>
     ${CUR ? '<p><button class="btn ghost sm" id="desfazer">Desfazer ajustes manuais</button></p>' : ''}
     ${probs ? `<div style="margin-top:12px"><b>Pontos a revisar nesta opção</b>${probs}</div>` : '<p style="margin-top:12px"><span class="pill ok">Todos os colaboradores dentro das regras verificadas</span></p>'}
-    ${sel.deficit ? `<p class="note">Faltam pessoas em ${sel.deficit} dia(s) do mês. Dá para reduzir o mínimo nesses dias, contratar ou testar outra opção.</p>` : ''}
+    ${sel.deficit ? `<p class="note">Em ${sel.deficit} dia(s) do mês, em algum momento do expediente, há menos gente que o mínimo. Dá para reduzir o mínimo, ajustar o horário de funcionamento, contratar ou testar outra opção.</p>` : ''}
   </section>`;
 
   const rem = S.emps.map(e => {
@@ -1031,8 +1158,10 @@ function balaoFerias(ei, anchor){
   const b = document.createElement('div');
   b.className = 'balao';
   b.innerHTML = `<button class="btn x fechar" aria-label="Fechar">✕</button>
-    <h4>Férias de ${esc(e.nome)} — ${esc(nomeMes(span))}</h4>
-    <span class="muted small">Dias em que as férias podem começar, pela escala escolhida:</span>
+    <h4>${esc(e.nome)} — ${esc(nomeMes(span))}</h4>
+    <b class="small">Horário</b>
+    <ul style="margin:2px 0 10px">${descreverHorario(sel.tpl[ei], diasTrabalhados(span, sel.works[ei])).split('; ').map(x => `<li style="color:var(--ink)">${esc(x)}</li>`).join('')}</ul>
+    <b class="small">Férias</b><br><span class="muted small">Dias em que podem começar, pela escala escolhida:</span>
     <div class="dias">${dias.length ? dias.map(d => `<span>${DIAS[d.wd]} ${pad(d.dia)}</span>`).join('') : '<em class="muted small">Nenhum dia possível neste mês.</em>'}</div>
     <ul>
       <li>Não pode começar nos 2 dias antes de folga ou feriado, nem num dia que já seja folga ou feriado (art. 134, §3º, da CLT).</li>
@@ -1048,6 +1177,7 @@ function balaoFerias(ei, anchor){
 }
 
 /* ---------- Documentos ---------- */
+function funcTexto(){ return DIAS.map((dn, d) => `${dn} ${S.aberto[d] && S.func[d] && S.func[d][0] ? S.func[d][0] + '–' + S.func[d][1] : 'fechado'}`).join(' · '); }
 const LOGO_DOC = `<img class="logo" alt="uFiscal" src="${document.querySelector('.topo img').src}">`;
 function inicioVigencia(span){ return span.first < span.inicioNovo ? span.inicioNovo : span.first; }
 function docEscala(){
@@ -1055,14 +1185,15 @@ function docEscala(){
   const idx = span.days.map((d, i) => i).filter(i => span.days[i].inMonth);
   const head = idx.map(i => { const d = span.days[i]; return `<th>${DIAS[d.wd].slice(0, 1)}<br>${d.dia}${d.feriado ? '*' : ''}</th>`; }).join('');
   const rows = S.emps.map((e, ei) => {
-    const sg = sel.segs[ei].find(x => x.length) || [];
-    return `<tr><td class="l">${esc(e.nome)}</td><td class="l">${esc(e.cargo)}</td><td class="l">${fmtSegs(sg)}</td>${idx.map(i => {
+    const hd = descreverHorario(sel.tpl[ei], diasTrabalhados(span, sel.works[ei]));
+    return `<tr><td class="l">${esc(e.nome)}</td><td class="l">${esc(e.cargo)}</td><td class="l">${esc(hd)}</td>${idx.map(i => {
       const d = span.days[i]; return `<td>${fechadoGer(S, d) ? (d.feriado ? 'FR' : '—') : sel.works[ei][i] ? 'T' : 'F'}</td>`; }).join('')}</tr>`;
   }).join('');
   const fer = idx.filter(i => span.days[i].feriado).map(i => `${span.days[i].dia} – ${span.days[i].feriado}`).join('; ');
   return `<div class="doc">${LOGO_DOC}
     <h1>ESCALA DE REVEZAMENTO — ${esc(nomeMes(span).toUpperCase())}</h1>
     <p class="meta"><b>Empregador:</b> ${esc(S.razao || '________________')} &nbsp; <b>CNPJ:</b> ${esc(S.cnpj || '________________')} &nbsp; <b>Local:</b> ${esc(S.cidade)}${S.uf ? '/' + S.uf : ''}</p>
+    <p class="meta"><b>Funcionamento:</b> ${esc(funcTexto())}</p>
     <p class="meta"><b>Regime:</b> ${esc(span.rFim.nome)} — EC 141/2026, Decreto 13.173/2026 e Portaria MTE 2.041/2026. <b>Atividade:</b> ${S.setor === 'comercio' ? 'comércio' : 'demais atividades'}.</p>
     <table><thead><tr><th class="l">Colaborador(a)</th><th class="l">Cargo</th><th class="l">Horário</th>${head}</tr></thead><tbody>${rows}</tbody></table>
     <p class="meta">Legenda: T = trabalho · F = repouso semanal · FR = feriado · — = estabelecimento fechado. ${fer ? '* Feriados: ' + esc(fer) + '.' : ''}</p>
@@ -1074,7 +1205,7 @@ function docEscala(){
 function docTermos(){
   const { span } = RES, sel = selecionada(), ini = inicioVigencia(span);
   return S.emps.map((e, ei) => {
-    const sg = sel.segs[ei].find(x => x.length) || [], carga = fmtH(cargaNova(S, span, e)), r = remuneracao(S, span, e), N = nDomingo(S, e);
+    const sg = sel.segs[ei].find(x => x.length) || [], hd = descreverHorario(sel.tpl[ei], diasTrabalhados(span, sel.works[ei])), carga = fmtH(soma(span.days.map((d, i) => d.inMonth ? segMin(sel.segs[ei][i]) : 0)) / 60 / (span.diasMes / 7)), r = remuneracao(S, span, e), N = nDomingo(S, e);
     const remTxt = !r ? 'Fica mantida a remuneração mensal atualmente contratada, sem qualquer redução.'
       : r.tipo === 'mensal' ? `Fica mantido o salário mensal de ${brl(r.sal)}, sem qualquer redução nominal ou proporcional.`
       : `Para preservar a remuneração mensal, o valor-hora passa de ${brl(r.horaAtual)} para ${brl(r.horaMin)}.`;
@@ -1084,7 +1215,7 @@ function docTermos(){
       <p><b>Empregador:</b> ${esc(S.razao || '______________________________')}, CNPJ ${esc(S.cnpj || '__________________')}.<br>
       <b>Empregado(a):</b> ${esc(e.nome)}, cargo ${esc(e.cargo || '__________________')}.</p>
       <p>Em razão da Emenda Constitucional nº 141/2026, do Decreto nº 13.173/2026 e da Portaria MTE nº 2.041/2026, as partes ajustam, a partir de ${fmtData(ini)}, o seguinte:</p>
-      <p><b>1. Jornada.</b> ${carga} semanais, em 5 dias de trabalho, no horário de ${fmtSegs(sg)}.</p>
+      <p><b>1. Jornada.</b> ${carga} semanais, em média, em 5 dias de trabalho por semana, no horário de ${esc(hd)}.</p>
       <p><b>2. Repouso.</b> Dois dias de descanso por semana, de 24 horas consecutivas cada, conforme a escala mensal de revezamento afixada no estabelecimento${S.aberto[DOM] ? `, com folga aos domingos ao menos uma vez a cada ${N} semanas` : ''}.</p>
       <p><b>3. Remuneração.</b> ${remTxt}</p>
       ${compTxt}
@@ -1103,8 +1234,7 @@ function linhasTabela(){
   const idx = span.days.map((d, i) => i).filter(i => span.days[i].inMonth);
   const lines = [['Colaborador', 'Horário', ...idx.map(i => `${DIAS[span.days[i].wd]} ${span.days[i].dia}`), 'Folgas no mês', 'Média semanal']];
   S.emps.forEach((e, k) => {
-    const sg = sel.segs[k].find(x => x.length) || [];
-    lines.push([e.nome, fmtSegs(sg), ...idx.map(i => fechadoGer(S, span.days[i]) ? (span.days[i].feriado ? 'Feriado' : 'Fechado') : sel.works[k][i] ? fmtH(segMin(sel.segs[k][i]) / 60) : 'Folga'), sel.evals[k].folgasMes, fmtH(sel.evals[k].media)]);
+    lines.push([e.nome, descreverHorario(sel.tpl[k], diasTrabalhados(span, sel.works[k])), ...idx.map(i => fechadoGer(S, span.days[i]) ? (span.days[i].feriado ? 'Feriado' : 'Fechado') : sel.works[k][i] ? fmtH(segMin(sel.segs[k][i]) / 60) : 'Folga'), sel.evals[k].folgasMes, fmtH(sel.evals[k].media)]);
   });
   lines.push(['Pessoas no dia', '', ...idx.map(i => sel.cov[i]), '', '']);
   return lines;

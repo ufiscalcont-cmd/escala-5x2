@@ -6,10 +6,10 @@ Ferramenta web (um único `index.html`, sem dependências) para montar escalas 5
 
 ## O que faz
 
-1. **Empresa e regras:** cidade (com feriados municipais pré-preenchidos para as cidades atendidas), UF, atividade, mês, início da semana, tipo de compensação (nenhuma, acordo individual ou norma coletiva), redistribuição de folgas, funcionamento em feriados, dias de abertura e mínimo de pessoas por dia.
+1. **Empresa e regras:** cidade (com feriados municipais pré-preenchidos para as cidades atendidas), UF, atividade, mês, início da semana, tipo de compensação (nenhuma, acordo individual ou norma coletiva), redistribuição de folgas, funcionamento em feriados, dias e horário de funcionamento e mínimo de pessoas ao mesmo tempo.
 2. **Escala atual:** digitada na tela ou importada da planilha [`modelo-escala-5x2.xlsx`](modelo-escala-5x2.xlsx) (botão *Importar planilha*). Na tela, informe o horário de cada dia por colaborador (ex.: `08:00-12:00 14:00-18:00`), com perfil (mulher, menor de 18, insalubre, tempo parcial) e remuneração (mensalista ou horista).
 3. **Diagnóstico:** o que a escala atual descumpre nas regras novas.
-4. **Opções de nova escala:** até 4 modelos, com calendário editável (toque num dia para trocar trabalho/folga e revalidar). Toque no nome do colaborador para ver, num balão, os dias em que ele pode começar as férias.
+4. **Opções de nova escala:** até 4 modelos, com turnos distribuídos para cobrir o horário de funcionamento (entradas e almoços escalonados), com calendário editável (toque num dia para trocar trabalho/folga e revalidar). Toque no nome do colaborador para ver, num balão, os dias em que ele pode começar as férias.
 5. **Remuneração:** salário-hora com o divisor novo, hora extra e valor-hora mínimo do horista.
 6. **Documentos:** escala de revezamento para afixar e termos aditivos individuais, prontos para imprimir; exportação CSV e cópia para Excel.
 
