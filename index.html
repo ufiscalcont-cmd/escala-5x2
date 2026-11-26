@@ -439,11 +439,11 @@ function opcoesTurno(s, e, wd, H){
     return [sg];
   }
   const len = j[1] - j[0];
-  let h = H, need = h > 360 ? 60 : h > 240 ? 15 : 0;
-  if (h + need > len) {
-    h = len - 60; need = 60;
-    if (h <= 360) { h = Math.min(H, len - 15); need = 15; if (h <= 240) { h = Math.min(H, len); need = 0; } }
-  }
+  let h, need;
+  const t60 = Math.min(H, len - 60), t15 = Math.min(H, 360, len - 15), t0 = Math.min(H, 240, len);
+  if (H > 360 && t60 > 360) { h = t60; need = 60; }
+  else if (Math.min(H, 360) > 240 && t15 > 240) { h = t15; need = 15; }
+  else { h = Math.max(0, t0); need = 0; }
   let iv = need === 60 ? Math.min(120, Math.max(60, mo.int)) : need;
   if (h + iv > len) iv = need;
   const dur = h + iv, starts = [], outs = [];
@@ -456,7 +456,7 @@ function opcoesTurno(s, e, wd, H){
     for (const f of (firsts.length ? firsts : [meio])) outs.push([[st, st + f], [st + f + iv, st + h + iv]]);
   }
   const ok = outs.filter(sg => !e.menor || (sg[0][0] >= 300 && sg[sg.length - 1][1] <= 1320));
-  return ok.length ? ok : (outs.length ? outs : [[[j[0], j[0] + Math.min(h, len)]]]);
+  return ok.length ? ok : (outs.length ? outs : [[[j[0], j[0] + Math.max(30, Math.min(h, len))]]]);
 }
 function horariosNovos(s, span, works, hFn){
   const covW = [0,1,2,3,4,5,6].map(wd => { const j = janela(s, wd); return j ? Array(Math.ceil((j[1] - j[0]) / 30)).fill(0) : null; });
@@ -498,6 +498,32 @@ function horariosNovos(s, span, works, hFn){
   });
 }
 function segsDeTpl(span, works, tpl){ return works.map((w, k) => span.days.map((d, i) => w[i] ? tpl[k][d.wd] : [])); }
+function cortarFim(sg, lim){
+  const out = [];
+  for (const [a, b] of sg) { if (a >= lim) break; out.push([a, Math.min(b, lim)]); }
+  return out;
+}
+// Garante 11h entre jornadas e 24h + 11h por folga: encurta o fim do dia anterior; se não der, transforma o dia em folga.
+function ajustarDescansos(span, w, row, podeFolgar){
+  row = row.map(x => x.slice());
+  let last = -1, dsr = 0;
+  for (let i = 0; i < span.days.length; i++) {
+    if (!w[i]) { if (!span.days[i].feriado) dsr++; continue; }
+    if (last >= 0) {
+      const lim = i * 1440 + row[i][0][0] - 660 - 1440 * dsr - last * 1440;
+      const fimPrev = row[last][row[last].length - 1][1];
+      if (fimPrev > lim) {
+        const viola = sg => { const t = segMin(sg), g = maxGap(sg); return (t > 360 && g < 60) || (t > 240 && g < 15); };
+        let lm = lim, cut = cortarFim(row[last], lm);
+        while (cut.length && viola(cut)) { lm -= 15; cut = cortarFim(row[last], lm); }
+        if (segMin(cut) >= 120) row[last] = cut;
+        else if (podeFolgar) { w[i] = false; row[i] = []; if (!span.days[i].feriado) dsr++; continue; }
+      }
+    }
+    last = i; dsr = 0;
+  }
+  return row;
+}
 function descreverHorario(tpl, wds){
   const grupos = [];
   wds.forEach(wd => { const t = fmtSegs(tpl[wd] || []), g = grupos.find(x => x.t === t); if (g) g.d.push(wd); else grupos.push({ t, d: [wd] }); });
@@ -592,9 +618,17 @@ function validar(s, span, e, work, segs, orig){
     if (novo) diasNovo++;
     if (d.wd === DOM) { domMes++; if (!work[i]) domFolga++; }
   });
-  const media = diasNovo ? (minNovo / 60) / (diasNovo / 7) : 0, Lfim = limiteSem(e, span.rFim);
-  if (s.comp !== 'nenhuma' && media > Lfim + EPS) err(`Média de ${fmtH(media)} por semana no mês, acima de ${Lfim}h.`);
-  if (s.comp !== 'nenhuma' && semHoras.length && media <= Lfim + EPS) warn(`Semana(s) ${semHoras.join(', ')} acima do limite, compensadas na média do mês — guarde o acordo de compensação.`);
+  const media = diasNovo ? (minNovo / 60) / (diasNovo / 7) : 0;
+  if (s.comp !== 'nenhuma' && semHoras.length) {
+    let saldo = 0;
+    for (let w = 0; w < span.weeks; w++) {
+      const dd = span.days.slice(w * 7, w * 7 + 7);
+      if (!dd.some(d => d.inMonth) || regra(dd[0].date).L !== span.rFim.L) continue;
+      saldo += soma(dd.map((d, k) => work[w * 7 + k] ? segMin(segs[w * 7 + k]) : 0)) / 60 - limiteSem(e, span.rFim);
+    }
+    if (saldo > EPS) err(`${fmtH(saldo)} acima do limite semanal não compensadas no mês (semanas ${semHoras.join(', ')}).`);
+    else warn(`Semana(s) ${semHoras.join(', ')} acima do limite, compensadas dentro do mês — guarde o acordo de compensação.`);
+  }
   if (s.redist && !span.transicao) {
     const min = span.diasMes >= 29 ? 9 : 8;
     if (folgasMes < min) err(`${folgasMes} folgas no mês. Com folgas redistribuídas, o mínimo é ${min}.`);
@@ -737,9 +771,10 @@ function genOtim(s, span){
     for (const i of order) {
       const N = nDomingo(s, s.emps[i]);
       let best = null, bs = -Infinity, bestSt = 0;
+      const forcaDom = s.aberto[DOM] && domSeq[i] >= N - 1;
       for (const c of combos) {
         const offs = new Set([...closed, ...c]);
-        if (s.aberto[DOM] && domSeq[i] >= N - 1 && !offs.has(DOM)) continue;
+        if (forcaDom) offs.add(DOM);
         let st = streak[i], ok = true;
         for (const wd of wds) { if (offs.has(wd)) st = 0; else if (++st > 6) { ok = false; break; } }
         if (!ok) continue;
@@ -749,7 +784,12 @@ function genOtim(s, span){
         if (c.includes(DOM)) sc += domSeq[i] * 0.6;
         if (sc > bs) { bs = sc; best = offs; bestSt = st; }
       }
-      if (!best) { best = new Set([...closed, ...combos[0]]); bestSt = 0; }
+      if (!best) {
+        best = new Set([...closed, ...combos[0]]); if (forcaDom) best.add(DOM);
+        let st = streak[i];
+        for (const wd of wds) { if (best.has(wd)) st = 0; else if (++st > 6) { best.add(wd); st = 0; } }
+        bestSt = st;
+      }
       for (const d of best) if (s.aberto[d]) cov[d]--;
       wds.forEach((wd, kk) => { work[i][w * 7 + kk] = !best.has(wd); });
       streak[i] = bestSt;
@@ -783,7 +823,8 @@ function gerarOpcoes(s, span){
     if (!s.redist) repararSemanas(s, span, works); else garantirMinimoMensal(s, span, works);
     const hFn = e => o.h ? o.h(s, span, e) : horaDia(s, span, e);
     const tpl = horariosNovos(s, span, works, hFn);
-    return Object.assign({ id: o.id, nome: o.nome, desc: o.desc, base: works.map(w => w.slice()), tpl }, avaliar(s, span, works, segsDeTpl(span, works, tpl)));
+    const segs = segsDeTpl(span, works, tpl).map((row, k) => ajustarDescansos(span, works[k], row, true));
+    return Object.assign({ id: o.id, nome: o.nome, desc: o.desc, base: works.map(w => w.slice()), tpl }, avaliar(s, span, works, segs));
   }).filter(Boolean).sort((a, b) => a.erros - b.erros || a.deficit - b.deficit || b.domPct - a.domPct);
 }
 
@@ -1055,7 +1096,8 @@ function editar(ei, i){
   const sel = selecionada(), span = RES.span;
   const works = sel.works.map(w => w.slice());
   works[ei][i] = !works[ei][i];
-  CUR = Object.assign(avaliar(S, span, works, segsDeTpl(span, works, sel.tpl), sel.base), { tpl: sel.tpl });
+  const segs = segsDeTpl(span, works, sel.tpl).map((row, k) => ajustarDescansos(span, works[k], row, false));
+  CUR = Object.assign(avaliar(S, span, works, segs, sel.base), { tpl: sel.tpl });
   renderSaida();
 }
 

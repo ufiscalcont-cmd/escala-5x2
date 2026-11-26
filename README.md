@@ -36,3 +36,7 @@ Os dados ficam salvos só no navegador de quem usa.
 Fora do escopo: 12x36, turnos ininterruptos, sobreaviso e cláusulas específicas de cada convenção.
 
 > Ferramenta de apoio ao planejamento. Não substitui a leitura da Portaria 2.041/2026 nem da norma coletiva da categoria.
+
+## Testes
+
+`node testes/fuzz.js 1000` gera 1.000 cenários aleatórios (meses de 2026 a 2028, feriados, horários de funcionamento, perfis, compensação) e confere cada escala gerada com um verificador independente das regras: repousos, domingos, intervalos, interjornada, limites de jornada, férias, remuneração e importação de planilha.
