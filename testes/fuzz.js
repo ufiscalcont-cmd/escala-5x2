@@ -25,7 +25,7 @@ function horarioAleatorio(){
 }
 function cenario(){
   const meses = []; for (let y = 2026; y <= 2028; y++) for (let m = 1; m <= 12; m++) meses.push(`${y}-${String(m).padStart(2, '0')}`);
-  const comp = pick(['nenhuma', 'individual', 'coletiva']);
+  const comp = pick(['nenhuma', 'individual', 'coletiva', 'risco']);
   const aberto = [0,1,2,3,4,5,6].map(() => chance(0.85)); if (!aberto.some(Boolean)) aberto[ri(0, 6)] = true;
   const func = [0,1,2,3,4,5,6].map(() => { if (chance(0.1)) return ['', '']; const a = ri(10, 20) * 30, b = a + ri(8, 30) * 30; return [hm(a), hm(Math.min(b, 1439))]; });
   const nE = ri(1, 12);
@@ -50,7 +50,7 @@ function oraculo(s, span, e, w, sg){
     if (!w[i]) return;
     const t = S(sg[i]); if (t > cap + 1e-6) v.add('teto_diario');
     const gap = sg[i].slice(1).reduce((m, x, k) => Math.max(m, x[0] - sg[i][k][1]), 0);
-    if (t > 360 && gap < 60) v.add('intervalo'); else if (t > 240 && gap < 15) v.add('intervalo');
+    if (t > 360 && gap < (s.comp === 'coletiva' ? 30 : 60)) v.add('intervalo'); else if (t > 240 && gap < 15) v.add('intervalo');
     if (e.menor && d.inMonth && L.minNoturnos(sg[i]) > 0) v.add('menor_noturno');
     if (d.feriado && d.inMonth && s.setor === 'comercio' && !s.ferAut) v.add('feriado_comercio');
   });
@@ -128,6 +128,18 @@ for (let t = 0; t < N; t++) {
         // validador coerente com oráculo nas opções também
         const msgs = o.evals[k].issues.filter(x => x.t === 'err').map(x => x.m).join(' | ');
         for (const [tipo, frag] of Object.entries(MSG)) if (tipo !== 'menor_insalubre' && msgs.includes(frag) !== ora.has(tipo)) falha('validador_divergente_opcao:' + tipo, { ...ctx, op: o.id, msgs });
+        // carga: nunca acima da meta; abaixo da meta só com aviso
+        const alvo = Math.min(s.comp === 'coletiva' || s.comp === 'risco' ? 42 : 40, span.rFim.L), at = L.cargaAtual(e);
+        const T = (at > 0 ? Math.min(at, L.limiteSem(e, span.rFim), alvo) : Math.min(L.limiteSem(e, span.rFim), alvo)) * 60;
+        const temAviso = o.evals[k].issues.some(x => x.m.startsWith('Não fecha'));
+        for (let wk = 0; wk < span.weeks; wk++) {
+          const dd = span.days.slice(wk * 7, wk * 7 + 7); let n = 0, m = 0;
+          dd.forEach((d, q) => { const i = wk * 7 + q; if (w[i]) { n++; m += L.segMin(sg[i]); } });
+          if (!n) continue;
+          let meta = n * T / 5; if (s.comp === 'nenhuma') meta = Math.min(meta, L.limiteSem(e, span.rFim) * 60);
+          if (m > meta + 2) falha('carga_acima_da_meta:' + o.id, { ...ctx, wk, m, meta });
+          if (L.regra(dd[0].date).L === span.rFim.L && !dd.some(d => d.feriado) && m < meta - 2 && !temAviso) falha('carga_abaixo_sem_aviso:' + o.id, { ...ctx, wk, m, meta });
+        }
         // férias: oráculo
         const fer = new Set(L.diasFerias(s, span, w).map(d => d.date.getTime()));
         const livre = j => j < span.days.length ? (!w[j] || !!span.days[j].feriado) : (() => { const dt = new Date(span.days[span.days.length - 1].date); dt.setDate(dt.getDate() + (j - span.days.length + 1)); return !w[j - 7] || !!L.ehFeriado(s, dt); })();

@@ -6,7 +6,7 @@ Ferramenta web (um único `index.html`, sem dependências) para montar escalas 5
 
 ## O que faz
 
-1. **Empresa e regras:** cidade (com feriados municipais pré-preenchidos para as cidades atendidas), UF, atividade, mês, início da semana, tipo de compensação (nenhuma, acordo individual ou norma coletiva), redistribuição de folgas, funcionamento em feriados, dias e horário de funcionamento e mínimo de pessoas ao mesmo tempo.
+1. **Empresa e regras:** cidade (com feriados municipais pré-preenchidos para as cidades atendidas), UF, atividade, mês, início da semana, carga semanal e acordo (40h sem acordo; 40h com acordo individual de compensação; 42h com acordo/convenção coletiva; 42h sem acordo coletivo, com a empresa assumindo o risco), redistribuição de folgas, funcionamento em feriados, dias e horário de funcionamento e mínimo de pessoas ao mesmo tempo.
 2. **Escala atual:** digitada na tela ou importada da planilha [`modelo-escala-5x2.xlsx`](modelo-escala-5x2.xlsx) (botão *Importar planilha*). Na tela, informe o horário de cada dia por colaborador (ex.: `08:00-12:00 14:00-18:00`), com perfil (mulher, menor de 18, insalubre, tempo parcial) e remuneração (mensalista ou horista).
 3. **Diagnóstico:** o que a escala atual descumpre nas regras novas.
 4. **Opções de nova escala:** até 4 modelos, com turnos distribuídos para cobrir o horário de funcionamento (entradas e almoços escalonados), com calendário editável (toque num dia para trocar trabalho/folga e revalidar). Toque no nome do colaborador para ver, num balão, os dias em que ele pode começar as férias.
@@ -14,6 +14,10 @@ Ferramenta web (um único `index.html`, sem dependências) para montar escalas 5
 6. **Documentos:** escala de revezamento para afixar e termos aditivos individuais, prontos para imprimir; exportação CSV e cópia para Excel.
 
 Os dados ficam salvos só no navegador de quem usa.
+
+## Carga igual para todos
+
+A nova escala distribui a carga semanal escolhida entre os dias trabalhados de cada pessoa: um dia curto (ex.: sábado até 12h) passa a diferença para os outros dias da semana, até o teto diário permitido pelo acordo. Sem acordo de compensação, nenhum dia passa de 8h — se a semana não fechar, a ferramenta avisa. Semanas com feriado têm carga menor.
 
 ## Regras verificadas
 
