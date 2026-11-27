@@ -43,4 +43,6 @@ Fora do escopo: 12x36, turnos ininterruptos, sobreaviso e cláusulas específica
 
 ## Testes
 
-`node testes/fuzz.js 1000` gera 1.000 cenários aleatórios (meses de 2026 a 2028, feriados, horários de funcionamento, perfis, compensação) e confere cada escala gerada com um verificador independente das regras: repousos, domingos, intervalos, interjornada, limites de jornada, férias, remuneração e importação de planilha.
+`node testes/fuzz.js 1000` gera 1.000 cenários aleatórios (meses de 2026 a 2029, empresas que viram a madrugada, só um dia aberto, até 30 colaboradores, mínimos impossíveis, feriados, horários de funcionamento, perfis, compensação) e confere cada escala gerada com um verificador independente das regras: repousos, domingos, intervalos, interjornada, limites de jornada, férias, remuneração e importação de planilha.
+
+Última rodada completa: 100.000 cenários e 299.786 escalas verificadas, sem falhas (27/11/2026).

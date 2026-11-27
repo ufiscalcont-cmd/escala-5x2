@@ -1,5 +1,5 @@
 // Bateria de testes aleatórios com verificador independente (oráculo)
-// Uso: node testes/fuzz.js [quantidade=1000] [semente=12345]
+// Uso: node testes/fuzz.js [quantidade=1000] [semente=12345]   (JSON=1 para saída em JSON)
 const fs = require('fs');
 const html = fs.readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
 const code = html.match(/<script id="logic">([\s\S]*?)<\/script>/)[1];
@@ -24,23 +24,33 @@ function horarioAleatorio(){
   return `${hm(ent)}-${hm(ent + a)} ${hm(ent + a + iv)}-${hm(ent + a + iv + b)}`;
 }
 function cenario(){
-  const meses = []; for (let y = 2026; y <= 2028; y++) for (let m = 1; m <= 12; m++) meses.push(`${y}-${String(m).padStart(2, '0')}`);
+  const meses = []; for (let y = 2026; y <= 2029; y++) for (let m = 1; m <= 12; m++) meses.push(`${y}-${String(m).padStart(2, '0')}`);
+  const modo = pick(['normal', 'normal', 'normal', 'madrugada', 'umdia', 'grande', 'impossivel', 'vazio', 'comercio24h', 'transicao']);
   const comp = pick(['nenhuma', 'individual', 'coletiva', 'risco']);
-  const aberto = [0,1,2,3,4,5,6].map(() => chance(0.85)); if (!aberto.some(Boolean)) aberto[ri(0, 6)] = true;
-  const func = [0,1,2,3,4,5,6].map(() => { if (chance(0.1)) return ['', '']; const a = ri(10, 20) * 30, b = a + ri(8, 30) * 30; return [hm(a), hm(Math.min(b, 1439))]; });
-  const nE = ri(1, 12);
+  let aberto = [0,1,2,3,4,5,6].map(() => chance(0.85));
+  if (modo === 'umdia') { aberto = Array(7).fill(false); aberto[ri(0, 6)] = true; }
+  if (modo === 'comercio24h') aberto = Array(7).fill(true);
+  if (!aberto.some(Boolean)) aberto[ri(0, 6)] = true;
+  const func = [0,1,2,3,4,5,6].map(() => {
+    if (chance(0.1)) return ['', ''];
+    if (modo === 'madrugada') { const a = ri(32, 44) * 30; return [hm(a), hm((a + ri(8, 20) * 30) % 1440)]; }   // atravessa a meia-noite
+    if (modo === 'comercio24h') return ['00:00', '23:59'];
+    const a = ri(10, 20) * 30, b = a + ri(8, 30) * 30; return [hm(a), hm(Math.min(b, 1439))];
+  });
+  const nE = modo === 'grande' ? ri(15, 30) : modo === 'umdia' ? ri(1, 4) : ri(1, 12);
   const emps = [...Array(nE)].map((_, i) => ({
     nome: 'E' + i, cargo: 'C', mulher: chance(0.5), menor: chance(0.1), insal: chance(0.1), parcial: chance(0.1),
     tipoRem: chance(0.3) ? 'hora' : 'mensal', sal: chance(0.1) ? '' : ri(800, 5000) / (chance(0.3) ? 100 : 1),
-    hor: [0,1,2,3,4,5,6].map(horarioAleatorio),
+    hor: modo === 'vazio' && chance(0.6) ? Array(7).fill('') : [0,1,2,3,4,5,6].map(horarioAleatorio),
   }));
+  const mes = modo === 'transicao' ? pick(['2026-11', '2026-12', '2027-01', '2027-11', '2027-12', '2028-01']) : pick(meses);
   return {
     razao: 'X', cnpj: '1', cidade: 'C', uf: pick(['BA', 'SE', '']), ferLocais: chance(0.5) ? `${ri(1, 28)}/${ri(1, 12)}, ${ri(1, 28)}/${ri(1, 12)}` : '',
-    setor: pick(['comercio', 'outros']), mes: pick(meses), semIni: String(ri(0, 6)), comp, redist: comp === 'coletiva' && chance(0.5),
-    abreFeriado: chance(0.4), ferAut: chance(0.5), aberto, minimo: [0,1,2,3,4,5,6].map(() => ri(0, 4)), func, emps,
+    setor: pick(['comercio', 'outros']), mes, semIni: String(ri(0, 6)), comp, redist: comp === 'coletiva' && chance(0.5),
+    abreFeriado: chance(0.4), ferAut: chance(0.5), aberto, func, emps,
+    minimo: [0,1,2,3,4,5,6].map(() => modo === 'impossivel' ? ri(5, 40) : ri(0, 4)),
   };
 }
-
 /* ---------- Oráculo: confere as regras por conta própria ---------- */
 function oraculo(s, span, e, w, sg){
   const v = new Set(), S = L.segMin, n = span.days.length;
@@ -137,8 +147,9 @@ for (let t = 0; t < N; t++) {
           dd.forEach((d, q) => { const i = wk * 7 + q; if (w[i]) { n++; m += L.segMin(sg[i]); } });
           if (!n) continue;
           let meta = n * T / 5; if (s.comp === 'nenhuma') meta = Math.min(meta, L.limiteSem(e, span.rFim) * 60);
+          const metaMin = Math.min(n * T / 5, L.limiteSem(e, span.rFim) * 60);
           if (m > meta + 2) falha('carga_acima_da_meta:' + o.id, { ...ctx, wk, m, meta });
-          if (L.regra(dd[0].date).L === span.rFim.L && !dd.some(d => d.feriado) && m < meta - 2 && !temAviso) falha('carga_abaixo_sem_aviso:' + o.id, { ...ctx, wk, m, meta });
+          if (L.regra(dd[0].date).L === span.rFim.L && !dd.some(d => d.feriado) && m < metaMin - 2 && !temAviso) falha('carga_abaixo_sem_aviso:' + o.id, { ...ctx, wk, m, meta });
         }
         // férias: oráculo
         const fer = new Set(L.diasFerias(s, span, w).map(d => d.date.getTime()));
@@ -176,6 +187,7 @@ for (let t = 0; t < N; t++) {
     cenOk++;
   } catch (err) { falha('EXCECAO: ' + err.message, { ...ctx, stack: err.stack.split('\n').slice(0, 4).join(' / ') }); }
 }
+if (process.env.JSON) { console.log(JSON.stringify({ N, cenOk, opcoesTestadas, falhas, exemplos })); process.exit(0); }
 console.log(`Cenários: ${N} · sem exceção: ${cenOk} · opções geradas e verificadas: ${opcoesTestadas}`);
 const tipos = Object.keys(falhas).sort((a, b) => falhas[b] - falhas[a]);
 if (!tipos.length) console.log('Nenhuma falha encontrada.');

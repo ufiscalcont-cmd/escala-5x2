@@ -531,10 +531,22 @@ function metaSemana(s, span, e, n){
 }
 function equalizarHoras(s, span, e, w, tplRow){
   const row = span.days.map((d, i) => w[i] ? (tplRow[d.wd] || []) : []);
+  // metas por semana; com compensação, semanas acima do limite são equilibradas para não sobrar saldo no mês
+  const nDias = [...Array(span.weeks).keys()].map(wk => { let n = 0; for (let k = 0; k < 7; k++) { const i = wk * 7 + k; if (w[i] && row[i].length) n++; } return n; });
+  const metas = nDias.map(n => metaSemana(s, span, e, n));
+  if (s.comp !== 'nenhuma') {
+    const Lm = limiteSem(e, span.rFim) * 60;
+    const conta = wk => span.days.slice(wk * 7, wk * 7 + 7).some(d => d.inMonth) && regra(span.days[wk * 7].date).L === span.rFim.L;
+    let saldo = soma(metas.map((m, wk) => conta(wk) ? m - Lm : 0));
+    if (saldo > 0) {
+      const exc = metas.map((m, wk) => conta(wk) ? Math.max(0, m - Lm) : 0), tot = soma(exc);
+      metas.forEach((m, wk) => { if (exc[wk]) metas[wk] = m - saldo * exc[wk] / tot; });
+    }
+  }
   for (let wk = 0; wk < span.weeks; wk++) {
     const idx = []; for (let k = 0; k < 7; k++) { const i = wk * 7 + k; if (w[i] && row[i].length) idx.push(i); }
     if (!idx.length) continue;
-    const meta = Math.round(metaSemana(s, span, e, idx.length));
+    const meta = Math.floor(metas[wk]);
     const caps = idx.map(i => capacidadeDia(s, e, span.days[i], row[i][0][0]));
     const alvo = Math.min(meta, soma(caps.map(c => c.h)));
     let lo = 0, hi = 24 * 60;
@@ -544,6 +556,8 @@ function equalizarHoras(s, span, e, w, tplRow){
     for (let k = 0; resto > 0 && k < hs.length * 2; k++) { const q = k % hs.length; if (hs[q] < caps[q].h) { hs[q]++; resto--; } }
     idx.forEach((i, q) => { const t = row[i]; row[i] = montarDiaAjustado(caps[q], t[0][0], t.length > 1 ? t[1][0] - t[0][1] : 60, t.length > 1 ? t[0][1] - t[0][0] : 0, hs[q]); });
   }
+  // dia marcado como trabalho mas sem nenhuma hora possível (ex.: menor numa janela noturna) vira folga
+  span.days.forEach((d, i) => { if (w[i] && !row[i].length) w[i] = false; });
   return row;
 }
 function segsEqualizados(s, span, works, tpl, podeFolgar){
@@ -564,6 +578,7 @@ function ajustarDescansos(span, w, row, podeFolgar){
   row = row.map(x => x.slice());
   let last = -1, dsr = 0;
   for (let i = 0; i < span.days.length; i++) {
+    if (w[i] && !row[i].length) w[i] = false;
     if (!w[i]) { if (!span.days[i].feriado) dsr++; continue; }
     if (last >= 0) {
       const lim = i * 1440 + row[i][0][0] - 660 - 1440 * dsr - last * 1440;
@@ -666,7 +681,7 @@ function validar(s, span, e, work, segs, orig, ehAtual){
     let n = 0, m = 0;
     for (let k = 0; k < 7; k++) { const i = w * 7 + k; if (work[i]) { n++; m += segMin(segs[i]); } }
     if (!n || regra(span.days[w * 7].date).L !== span.rFim.L || span.days.slice(w * 7, w * 7 + 7).some(d => d.feriado)) continue;
-    const meta = metaSemana(s, span, e, n);
+    const meta = Math.min(metaSemana(s, span, e, n), limiteSem(e, span.rFim) * 60);
     if (m < meta - 1) abaixo.push(`${w + 1} (${fmtH(m / 60)})`);
   }
   if (abaixo.length) warn(`Não fecha ${fmtH(cargaNova(s, span, e))} na(s) semana(s) ${lst(abaixo)}. ${s.comp === 'nenhuma' ? 'Sem acordo de compensação, cada dia vai até 8h: dias curtos (como sábado) deixam a semana incompleta. Escolha uma opção com acordo ou amplie o horário de funcionamento.' : 'O horário de funcionamento ou o teto de 10h/dia não comporta a carga.'}`);
@@ -829,6 +844,7 @@ function genRevez(s, span){
       if (adj(f, g)) sc += 0.3;
       if (sc > bs) { bs = sc; best = { f, g, work }; }
     }
+    if (!best) return fromWeekly(span, w => new Set([...closedWk, ...(domOff(w) ? [DOM] : [])]));
     if (s.aberto[best.f]) covExp[best.f] -= 1;
     covExp[best.g] -= (N - 1) / N; covExp[DOM] -= 1 / N;
     return best.work;
